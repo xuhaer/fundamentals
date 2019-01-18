@@ -37,7 +37,7 @@ person('Jack', 24, 'Beijing', job='Engineer')# Jack 24 ('Beijing',) Engineer
 命名关键字参数可以有缺省值，从而简化调用：
 
 ```python
-def person(name, *, age=23,job):
+def person(name, *, age=23, job):
     print(name, age, job)
 person('Jack', job='Engineer')# Jack 23 Engineer
 
