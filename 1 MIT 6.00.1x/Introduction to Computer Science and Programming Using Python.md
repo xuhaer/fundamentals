@@ -145,3 +145,6 @@ Complexity: Use `Big O` notation
 
 ![相关图片](./complexities.png)
 
+
+
+其余的课程要么较为熟知( 如 Week 6)，那么打算在接下来的课程中再去深入了解(如 Week 7:Trees), 仅仅看了一遍而没做笔记，那么此教程就相当于结束了。
