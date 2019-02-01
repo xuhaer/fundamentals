@@ -14,7 +14,7 @@
 * 1.1 程序设计的基本元素(The Elements of Programming)
 * 1.2 过程与它们所产生的计算(Procedures and the Processes They Generate)
 * 1.3 用高阶函数做抽象(Formulating Abstractions with Higher-Order Procedures)
-### 第2章 构造数据抽象(Building Abstractions with Data)
+### 第2章 [构造数据抽象(Building Abstractions with Data)](./2 构造数据抽象.md)
 * 2.1 数据抽象导引(Introduction to Data Abstraction)
 * 2.2 层次性数据和闭包性质(Hierarchical Data and the Closure Property)
 * 2.3 符号数据(Symbolic Data)
