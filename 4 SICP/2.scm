@@ -2,7 +2,7 @@
 (define (last-pair lst)
     (cond ((null? (cdr lst))
             lst)
-          (else
+          (else (last-pair (cdr lst)))))
 ;(last-pair (list 1 2 3))
 ;Value 13: (3)
 
