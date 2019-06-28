@@ -369,7 +369,7 @@ with 语句会在这个代码块执行前自动获取锁，在执行 结束后�
 
 ### 12.5 防止死锁的加锁机制
 
-在多线程程序中，死锁问题很大一部分是由于线程同时获取多个锁造成的。举个例 子:一个线程获取了第一个锁，然后在获取第二个锁的时候发生阻塞，那么这个线程就 可能阻塞其他线程的执行，从而导致整个程序假死。解决死锁问题的一种方案是为程序 中的每一个锁分配一个唯一的 id，然后只允许按照升序规则来使用多个锁，这个规则 使用上下文管理器是非常容易实现的，示例如下:
+在多线程程序中，死锁问题很大一部分是由于线程同时获取多个锁造成的。举个例 子:一个线程获取了第一个锁，然后在获取第二个锁的时候发生阻塞，那么这个线程就可能阻塞其他线程的执行，从而导致整个程序假死。解决死锁问题的一种方案是为程序中的每一个锁分配一个唯一的 id，然后只允许按照升序规则来使用多个锁，这个规则使用上下文管理器是非常容易实现的，示例如下:
 ```Python
 import threading
 from contextlib import contextmanager
@@ -424,12 +424,79 @@ t2 = threading.Thread(target=thread_2)
 t2.daemon = True
 t2.start()
 ```
-如果你执行这段代码，你会发现它即使在不同的函数中以不同的顺序获取锁也没 有发生死锁。其关键在于，在第一段代码中，我们对这些锁进行了排序。通过排序，使 得不管用户以什么样的顺序来请求锁，这些锁都会按照固定的顺序被获取。
+如果你执行这段代码，你会发现它即使在不同的函数中以不同的顺序获取锁也没 有发生死锁。其关键在于，在第一段代码中，我们对这些锁进行了排序。通过排序，使得不管用户以什么样的顺序来请求锁，这些锁都会按照固定的顺序被获取。
 
 死锁是每一个多线程程序都会面临的一个问题(就像它是每一本操作系统课本的 共同话题一样)。根据经验来讲，尽可能保证每一个线程只能同时保持一个锁，这样程 序就不会被死锁问题所困扰。一旦有线程同时申请多个锁，一切就不可预料了。
 
 死锁的检测与恢复是一个几乎没有优雅的解决方案的扩展话题。一个比较常用的 死锁检测与恢复的方案是引入看门狗计数器。当线程正常运行的时候会每隔一段时间 重置计数器，在没有发生死锁的情况下，一切都正常进行。一旦发生死锁，由于无法重 置计数器导致定时器超时，这时程序会通过重启自身恢复到正常状态。
 
-避免死锁是另外一种解决死锁问题的方式，在进程获取锁的时候会严格按照对象 id 升序排列获取，经过数学证明，这样保证程序不会进入死锁状态。证明就留给读者作 为练习了。避免死锁的主要思想是，单纯地按照对象 id 递增的顺序加锁不会产生循环 依赖，而循环依赖是死锁的一个必要条件，从而避免程序进入死锁状态。
+避免死锁是另外一种解决死锁问题的方式，在进程获取锁的时候会严格按照对象 id 升序排列获取，经过数学证明，这样保证程序不会进入死锁状态。证明就留给读者作 为练习了。**避免死锁的主要思想是，单纯地按照对象 id 递增的顺序加锁不会产生循环依赖，而循环依赖是死锁的一个必要条件，从而避免程序进入死锁状态。**
 
+
+
+### 12.8 简单的并行编程
+concurrent.futures 库提供了一个 ProcessPoolExecutor 类，可被用来在一个单 独的 Python 解释器中执行计算密集型函数。
+下面是一个脚本，在这些日志文件中查找出所有访问过 robots.txt 文件的主机:
+```Python
+import gzip
+import io
+import glob
+
+def find_robots(filename): '''
+    Find all of the hosts that access robots.txt in a single log file '''
+    robots = set()
+    with gzip.open(filename) as f:
+        for line in io.TextIOWrapper(f,encoding='ascii'):
+            fields = line.split()
+            if fields[6] == '/robots.txt':
+                robots.add(fields[0]) return robots
+    return robots
+
+def find_all_robots(logdir): '''
+    Find all hosts across and entire sequence of files '''
+    files = glob.glob(logdir+'/*.log.gz')
+    all_robots = set()
+    for robots in map(find_robots, files):
+        all_robots.update(robots)
+    return all_robots
+
+if __name__ == '__main__':
+    robots = find_all_robots('logs')
+    for ipaddr in robots:
+        print(ipaddr)
+```
+现在，假设你想要修改这个程序让它使用多核 CPU。很简 单——只需要将 map() 操作替换为一个 concurrent.futures 库中生成的类似操作即 可。下面是一个简单修改版本:
+```Python
+from concurrent import futures
+
+def find_robots(filename): 
+    '''Find all of the hosts that access robots.txt in a single log file'''
+    robots = set()
+    with gzip.open(filename) as f:
+        for line in io.TextIOWrapper(f,encoding='ascii'):
+            fields = line.split()
+            if fields[6] == '/robots.txt':
+                robots.add(fields[0])
+    return robots
+
+def find_all_robots(logdir): 
+    '''Find all hosts across and entire sequence of files '''
+    files = glob.glob(logdir+'/*.log.gz')
+    all_robots = set()
+    with futures.ProcessPoolExecutor() as pool:
+        for robots in pool.map(find_robots, files):
+            all_robots.update(robots)
+    return all_robots
+```
+通过这个修改后，运行这个脚本产生同样的结果，但是在四核机器上面比之前快了 3.5 倍。实际的性能优化效果根据你的机器 CPU 数量的不同而不同。
+
+其原理是，一个 ProcessPoolExecutor 创建 N 个独立的 Python 解释器，N 是系 统上面可用 CPU 的个数。你可以通过提供可选参数给 ProcessPoolExecutor(N) 来修 改处理器数量。这个处理池会一直运行到 with 块中最后一个语句执行完成，然后处理池被关闭。不过，程序会一直等待直到所有提交的工作被处理完成。
+
+### 12.9 Python 的全局锁问题
+
+GIL 最大的问题就是 Python 的多线程程序并不能利用 多核 CPU 的优势(比如一个使用了多个线程的计算密集型程序只会在一个单 CPU 上 面运行)。
+
+GIL 只会影响到那些严重依赖 CPU 的程序(比如计算型的)。如果你的程序大部分只会涉及到 I/O，比如网络交互，那么 使用多线程就很合适，因为它们大部分时间都在等待。实际上，你完全可以放心的创建 几千个 Python 线程，现代操作系统运行这么多线程没有任何压力，没啥可担心的。
+
+还有一点要注意的是，线程不是专门用来优化性能的。
 
