@@ -109,3 +109,62 @@ my_dict = {k:k for k in ['name', 'date', 'foo', 'bar']}
 sz(my_dict) / sz(my_nt) # 3
 ```
 
+## 第五章 一等函数
+
+在 Python 中，函数是一等对象。编程语言理论家把"一等对象"定义为满足下述条件的程序实体：
+* 在运行时创建
+* 能赋值给变量或数据结构中的元素
+* 能作为参数传给函数
+* 能作为函数的返回结果
+
+有了一等函数，就可以使用函数式风格编程。其特点之一是使用高阶函数(接受函数为参数，或者把函数作为结果返回的函数是高阶函数。例如 map 函数、sorted 函数))。
+
+巧遇：
+```Python
+all([]) == all('') == all({}) == True # True: Return True if all elements of the iterable are true (or if the iterable is empty).
+any([]) # False: Return True if any element of the iterable is true. If the iterable is empty, return False
+
+all([{}]) # False
+```
+特别注意上面的 all([]) 为真。
+
+### 5.10.1 operator 模块
+
+在函数式编程中，经常需要把算术运算符当作函数使用。例如，求积运算，我们可以使用 reduce 函数，但这样一般需要一个函数计算序列中两个元素的积。如下：
+```Python
+from functools import reduce
+
+def fact(n):
+    return reduce(lambda a,b: a*b, rang(1, n+1))
+```
+operator 模块为多个运算符提供了对应的函数，从而避免写 lambda a, b: a*b 这种平凡的匿名函数。使用算数运算符函数，可以把上面改为：
+```Python
+from operator import mul
+
+def fact(n):
+    return reduce(mul, range(1, n+1))
+```
+当然，operator 中还有一类能替代从序列中取出元素或读取对象属性的 lambda 表达式——itemgetter 和 attrgetter；暂且不表。
+
+最后说一下 operator 模块中的 methodcaller。它的作用与 attrgetter、itemgetter 类似，它会自行创建函数。该函数会在对象上调用参数指定的方法：
+```Python
+from operator import  methodcaller
+
+s = 'The time has come'
+upcase = methodcaller('upper') # callable
+upcase(s) # 'THE TIME HAS COME'
+
+hiphenate = methodcaller('replace', ' ', '-')
+hiphenate(s) # 'The-time-has-come'
+```
+
+### 5.10.2 使用 functools.partial 冻结参数
+使用这个函数可以把接受一个或多个参数的函数改编成需要会调的 API：
+```Python
+from operator import mul
+from functools import partial
+
+triple = partial(mul, 3)
+triple(7) # 21
+```
+partial 的第一个参数是一个可调用对象，后面跟着任意个要绑定的定位参数和关键字参数。
