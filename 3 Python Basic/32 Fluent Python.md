@@ -168,3 +168,25 @@ triple = partial(mul, 3)
 triple(7) # 21
 ```
 partial 的第一个参数是一个可调用对象，后面跟着任意个要绑定的定位参数和关键字参数。
+
+[Python: Why is functools.partial necessary?](https://stackoverflow.com/questions/3252228/python-why-is-functools-partial-necessary)
+
+
+
+## 第七章 函数装饰器和闭包
+
+nonlocal 是 Python3.0引入的保留关键字，如果想要了解闭包的方方面面，必须知道 nonlocal。
+
+除了在装饰器中有用处之外，闭包还是回调式异步编程和函数式编程风格的基础。本章的最终目标是解释清楚函数装饰器的工作原理，包括最简单的注册装饰器和较复杂的参数化装饰器。但是，在实现这一目标之前，我们要讨论下述话题：
+
+* Python如何计算装饰器句法
+* Python如何判断变量是不是局部的 
+* 闭包存在的原因和工作原理
+* nonlocal能解决什么问题
+
+掌握这些基础知识后，我们可以进一步探讨装饰器：
+
+* 实现行为良好的装饰器
+* 标准库中有用的装饰器
+* 实现一个参数化装饰器
+
