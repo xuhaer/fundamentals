@@ -359,3 +359,42 @@ Out[40]: True
 
 singledispatch 机制的一个显著特征是 支持模块化扩展: 你可以在系统的任何地方和任何模块中注册专门函数。如果后来在新函数的模块中定义了新的类型，可以轻松地添加一个新的函数来处理那个类型，此外还可以为不是自己编写的或不能修改的类添加自定义函数。
 
+
+
+## 第八章 对象引用、可变性和垃圾回收
+
+### 8.4.2 防御可变参数
+
+如果定义的函数接受可变参数，应该谨慎考虑调用方是否期望修改传入的参数。
+
+```Python
+class Bus:
+    """让乘客销声匿迹的校车"""
+    def __init__(self, passengers=None):
+        if passengers is None:
+            self.passengers = []
+        else:
+            self.passengers = passengers
+    
+    def pick(self, name):
+        self.passengers.append(name)
+    
+    def drop(self, name):
+        self.passengers.remove(name)
+```
+
+```Python
+team = ['Sue', 'Tina', 'Maya']
+bus = Bus(team)
+bus.drop('Tina')
+team # ['Sue', 'Maya']
+```
+
+看似没问题的一个类，可当 Tina 下车后，该乘客却消失了！ 究其原因是校车为传给构造方法的列表创建了别名。正确的做法是，校车自己维护乘客列表(如`self.passengers = list(passengers)`)
+
+除非这个方法确实想修改通过参数传入的对象，否则在类中直接把参数赋值给实例变量之前一定要三思，因为这样会为参数对象创建别名。
+
+###  第十一章 接口：从协议到抽象基类
+
+![image-20190709205716020](./figure/ABC.png)
+
