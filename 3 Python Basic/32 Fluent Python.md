@@ -398,3 +398,62 @@ team # ['Sue', 'Maya']
 
 ![image-20190709205716020](./figure/ABC.png)
 
+日常使用中，我们与抽象基类的联系应该是创建现有抽象基类的子类，或者使用现有抽象基类注册。此外，可能还会在 isinstance 检查中使用抽象基类。
+
+抽象方法用`@abstractmethod`装饰器标记，而且定义体中通常只有文档字符串。不过，抽象方法也可以有代码实现，即便实现了，子类也必须覆盖抽象方法，但是在子类中可以使用 super()函数调用抽象方法，为它添加功能，而不是从头开始实现。
+
+另外，Python 是一门强类型、动态类型的语言:
+
+```Python
+# 强类型
+'1' + 2 # TypeError: can only concatenate str (not "int") to str
+
+# 动态类型
+a = 1
+type(a) # int
+a = 's'
+type(a) # str
+```
+
+### 第12章 继承的优缺点
+
+#### 12.1 子类化内置类型很麻烦
+
+内置类型(使用 C 语言编写)不会调用用户定义的类覆盖的特殊方法。例如，dict 的子类覆盖的`__getitem__()`方法不会被内置类型 `get()`方法调用。
+
+示例：内置类型 dict 的`__init__` 和 `__update__`方法会忽略我们覆盖的`__setitem__`方法
+
+```Python
+class DoppelDict(dict):
+    def __setitem__(self, key, value):
+        super().__setitem__(key, [value] * 2)
+
+dd = DoppelDict(one=1)
+dd # {'one': 1}
+dd['two'] = 2
+dd # {'one': 1, 'two': [2, 2]}
+dd.update(three=3)
+dd # {'one': 1, 'two': [2, 2], 'three': 3}
+```
+
+不只实例内部的调用有这个问题(self.get()不能调用 `self.__getitem__()`)，内置类型的方法调用的其他类的方法，如果被覆盖了，也不会被调用：
+
+```Python
+class AnswerDict(dict):
+    def __getitem__(self, key):
+        return 42
+
+ad = AnswerDict(a='foo')
+ad # {'a': 42}
+
+d = {}
+d.update(ad)
+d # {'a': 'foo'}
+```
+
+* 上例中，不管传入什么键，`AnswerDict.__getitem__()`方法始终返回42。
+* d 是 dict 的实例，使用 ad 中的值更新 d。
+* dict.update 方法忽略了`AnswerDict.__getitem__`方法。
+
+直接子类化内置内型（如 dict、list 或 str）容易出错，因为内置类型的方法通常会忽略用户覆盖的方法。不要子类化内置类型，用户自定的类应该继承 collections 模块。例如 [`UserDict`](https://docs.python.org/3/library/collections.html#collections.UserDict)、[`UserList`](https://docs.python.org/3/library/collections.html#collections.UserList)、[`UserString`](https://docs.python.org/3/library/collections.html#collections.UserString)等。如果将上例继承自 UserDict 则bu'h不会存在上面诡异的现象。
+
