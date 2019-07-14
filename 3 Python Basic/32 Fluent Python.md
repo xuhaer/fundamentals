@@ -457,3 +457,162 @@ d # {'a': 'foo'}
 
 直接子类化内置内型（如 dict、list 或 str）容易出错，因为内置类型的方法通常会忽略用户覆盖的方法。不要子类化内置类型，用户自定的类应该继承 collections 模块。例如 [`UserDict`](https://docs.python.org/3/library/collections.html#collections.UserDict)、[`UserList`](https://docs.python.org/3/library/collections.html#collections.UserList)、[`UserString`](https://docs.python.org/3/library/collections.html#collections.UserString)等。如果将上例继承自 UserDict 则bu'h不会存在上面诡异的现象。
 
+
+
+### 第十五章 上下文管理器和 else 块
+
+Python 用户往往会忽略或没有充分使用 for、while 和 try 语句的 else 子句。
+
+**for**
+
+​	仅当 for 循环运行完毕时(即 for 循环没有被 break 语句中止)才运行 else 块。
+
+**while**
+
+​	仅当 while 循环因为条件为假值而退出时(即 while 循环没有被 break 语句中止) 才运行 else 块。
+
+**try**
+
+​	仅当 try 块中没有异常抛出时才运行 else 块。
+
+在所有情况下，如果异常或者 return、break 或 continue 语句导致控制权跳到了复合语句的主块之外，else 子句也会被跳过。
+
+> 我觉得除了 if 语句之外，其他语句选择使用 else关键字是个错误。else 蕴含着“排他性”这层意思，在上例中却说不通，因此，使用 then 关键字更好，可是，添加新关键字属于语言的重大变化，而 Guido 唯恐避之不及。
+
+在循环中使用 else 子句 的方式如下代码片段所示：
+
+```Python
+for item in my_list:
+    if item.flavor == 'banana':
+        break
+else:
+    raise ValueError('No banana flavor found!')
+```
+
+可能，你觉得没有必要在 try/except 块中使用 else 子句：
+
+```Python
+try:
+    dangerous_call()
+    after_call()
+except OSError:
+    log('OSError!...')
+```
+
+然而，after_call() 不应该放在 try 块中，为了清晰和准确，try 块中应该只抛出预期异常的语句。因此，像下面这样写更好：
+
+```Python
+try:
+    dangerous_call()
+except OSError:
+    log('OSError!...')
+else:
+    after_call()
+```
+
+现在很明确，try 防守的是 dangerous_call() 可能出现的错误，而不是 after_call()。而且很明显，只有 try 块不抛出异常，才会执行 agfter_call()。
+
+### 第十六章 协程
+
+第七章讨论闭包时，我们使用闭包 + nonlocal 的方式计算平均价格，若使用协程，则 total 和 cnt 声明为局部变量即可，无需使用实例属性或闭包在多次调用之间保持上下文。
+
+```Python
+def averager():
+    total, cnt, average = 0, 0, None
+    while True:
+        term = yield average
+        total += term
+        cnt += 1
+        average = total / cnt
+```
+
+```Python
+In [42]: coro_avg = averager()
+
+In [43]: next(coro_avg) # 预激协程
+
+In [44]: coro_avg.send(10)
+Out[44]: 10.0
+
+In [45]: coro_avg.send(20)
+Out[45]: 15.0
+```
+
+**终止协程和异常处理**
+
+客户代码可以在生成器对象上调用 throw 和 close 方法显示地把异常发给协程。
+
+```Python
+class DemoException(Exception):
+    """pass"""
+
+def demo_exc_handling():
+    print("--> coroutine started")
+    while True:
+        try:
+            x = yield
+        except DemoException:
+            print("DemoException handled.")
+        else:
+            print(f"-->coroutine received {x}")
+    raise RuntimeError("This should never happen")
+```
+
+```Python
+In [47]: exc_coro = demo_exc_handling()
+
+In [48]: next(exc_coro)
+--> coroutine started
+
+In [49]: exc_coro.send(10)
+-->coroutine received 10
+
+In [50]: exc_coro.send(20)
+-->coroutine received 20
+
+In [51]: exc_coro.close()
+
+In [52]: from inspect import  getgeneratorstate
+
+In [53]: getgeneratorstate(exc_coro)
+Out[53]: 'GEN_CLOSED'
+```
+
+如果把 DemoException 异常传入 demo_exc_handling 协程，它会处理，然后继续运行：
+```Python
+In [54]: exc_coro = demo_exc_handling()
+
+In [55]: next(exc_coro)
+--> coroutine started
+
+In [56]: exc_coro.send(10)
+-->coroutine received 10
+
+In [57]: exc_coro.throw(DemoException)
+DemoException handled.
+
+In [58]: getgeneratorstate(exc_coro)
+Out[58]: 'GEN_SUSPENDED'
+```
+
+但是，如果传入协程的异常没有处理，协程会停止，即状态变成'GEN_CLOSED':
+
+```Python
+In [59]: exc_coro = demo_exc_handling()
+
+In [60]: next(exc_coro)
+--> coroutine started
+
+In [61]: exc_coro.send(10)
+-->coroutine received 10
+
+In [62]: exc_coro.throw(ZeroDivisionError)
+-----------------------------------------------------------------
+ZeroDivisionError
+......
+
+
+In [63]: getgeneratorstate(exc_coro)
+Out[63]: 'GEN_CLOSED'
+```
+
