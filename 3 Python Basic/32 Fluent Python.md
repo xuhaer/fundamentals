@@ -708,5 +708,64 @@ def main():
 
 
 
-## 第19章 动态属性和特性
+## 第20章 属性描述符
+
+描述符是实现了特定协议的类，这个协议包括了`__get__`、`__set__` 和`__delete__`方法。`property`类实现了完整的描述符协议。通常，可以只实现部分协议。使用描述符的 Python 功能还有方法及 classmethod 和 staticmethod 装饰器。
+
+描述符可以用来做什么——它们提供了一种方法将property的逻辑隔离到单独的类中来处理。如果你发现自己正在不同的property之间重复着相同的逻辑，那么描述符是值得尝试的。
+
+```Python
+from weakref import WeakKeyDictionary
+
+class NonNegative:
+    """A descriptor that forbids negative values"""
+    def __init__(self, default):
+        self.default = default
+        # 使用WeakKeyDictionary来取代普通的字典以防止内存泄露——不能仅仅因为它在描述符的字典中就让一个无用的实例一直存活着。
+        self.data = WeakKeyDictionary()
+
+    def __get__(self, instance, owner):
+        return self.data.get(instance, self.default)
+
+    def __set__(self, instance, value):
+        if value < 0:
+            raise ValueError("Negative value not allowed: %s" % value)
+        self.data[instance] = value
+
+
+class Movie:
+
+    # always put descriptors at the class-level
+    rating = NonNegative(0)
+    runtime = NonNegative(0)
+    budget = NonNegative(0)
+    gross = NonNegative(0)
+
+    def __init__(self, _title, _rating, _runtime, _budget, _gross):
+        self.title = _title
+        self.rating = _rating
+        self.runtime = _runtime
+        self.budget = _budget
+        self.gross = _gross
+
+    def profit(self):
+        return self.gross - self.budget
+```
+
+```Python
+m = Movie('Casablanca', 97, 102, 964000, 1300000)
+print(m.budget)  # calls Movie.budget.__get__(m, Movie)
+m.rating = -1  # calls Movie.budget.__set__(m, -1)
+```
+
+在编写`__set__`方法时，要记住 self 和 instance 参数的意思：self 是描述符实例，instance 是托管实例。管理实例属性的描述符应该把值储存在托管实例中。
+
+描述符用法建议：
+内置的 property 类创建的其实是覆盖型描述符，`__set__`方法和`__get__`方法都实现了，即便不定义设值也是如此，特性的`__set__`方法默认抛出 AttributeError: cant't set attribute，因此创建只读属性最简单的方式是使用 property 特性。
+
+而对于描述符，若要实现只读属性，要记住，`__set__`和`__get__`方法必须都定义，否则，实例的同名属性会遮盖描述符。只读属性的`__set__`方法只需抛出 AttributeError 异常，比提供合适的错误消息即可。
+
+## 第21章 类元编程
+
+![Python Tutor 图](./figure/21_ metaclasses.png)
 
