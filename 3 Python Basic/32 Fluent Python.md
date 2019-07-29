@@ -394,7 +394,7 @@ team # ['Sue', 'Maya']
 
 除非这个方法确实想修改通过参数传入的对象，否则在类中直接把参数赋值给实例变量之前一定要三思，因为这样会为参数对象创建别名。
 
-###  第十一章 接口：从协议到抽象基类
+##  第十一章 接口：从协议到抽象基类
 
 ![image-20190709205716020](./figure/ABC.png)
 
@@ -415,7 +415,9 @@ a = 's'
 type(a) # str
 ```
 
-### 第12章 继承的优缺点
+
+
+## 第12章 继承的优缺点
 
 #### 12.1 子类化内置类型很麻烦
 
@@ -459,7 +461,7 @@ d # {'a': 'foo'}
 
 
 
-### 第十五章 上下文管理器和 else 块
+## 第十五章 上下文管理器和 else 块
 
 Python 用户往往会忽略或没有充分使用 for、while 和 try 语句的 else 子句。
 
@@ -478,6 +480,10 @@ Python 用户往往会忽略或没有充分使用 for、while 和 try 语句的
 在所有情况下，如果异常或者 return、break 或 continue 语句导致控制权跳到了复合语句的主块之外，else 子句也会被跳过。
 
 > 我觉得除了 if 语句之外，其他语句选择使用 else关键字是个错误。else 蕴含着“排他性”这层意思，在上例中却说不通，因此，使用 then 关键字更好，可是，添加新关键字属于语言的重大变化，而 Guido 唯恐避之不及。
+
+![Python 关键词](./figure/16_python_keywords.png)
+
+
 
 在循环中使用 else 子句 的方式如下代码片段所示：
 
@@ -512,7 +518,9 @@ else:
 
 现在很明确，try 防守的是 dangerous_call() 可能出现的错误，而不是 after_call()。而且很明显，只有 try 块不抛出异常，才会执行 agfter_call()。
 
-### 第十六章 协程
+
+
+## 第十六章 协程
 
 第七章讨论闭包时，我们使用闭包 + nonlocal 的方式计算平均价格，若使用协程，则 total 和 cnt 声明为局部变量即可，无需使用实例属性或闭包在多次调用之间保持上下文。
 
@@ -615,4 +623,90 @@ ZeroDivisionError
 In [63]: getgeneratorstate(exc_coro)
 Out[63]: 'GEN_CLOSED'
 ```
+
+
+
+## 第十七章 使用期物(future) 处理并发
+
+在 `flags_threadpool.py、flags_asyncio.py`的实例后，有一注解：
+
+> 全局解释器锁(GIL)，这是 CPython 解释器的局限，与 Python 语言本身无关。Jython 和 IronPython 没有这种限制。不过，目前最快的Python 解释器 PyPy 也有 GIL。
+
+这个与语言本身无关倒是我一直以来的误解。
+
+**然而，标准库中所有执行阻塞型 I/O 操作的函数，在等待操作系统返回结果时都会释放 GIL，允许其他线程进行。time.sleep()函数也会释放 GIL。因此尽管有 GIL，Python 线程还是能在 I/O 密集型应用中发挥作用。**
+
+
+
+### 17.3 使用concurrent.futures 模块启动进程
+
+下面简单说明如何在 CPU 密集型作业中如何使用 concurrent.futures 模块轻松绕开 GIL。
+
+ [`concurrent.futures`](https://docs.python.org/3/library/concurrent.futures.html#module-concurrent.futures) 的副标题是 Launching parallel tasks,这个模块实现的是真正的并行计算，因为它使用[`ProcessPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor) 类把工作分配给多个 Python 进程处理。因此，如果要做 CPU 密集型处理，使用这个模块能绕开 GIL，利用所有可用的 CPU 核心。
+
+
+
+**ProcessPoolExecutor 和 ThreadPoolExecutor 类都实现了通用 Executor 接口，因此使用 concurrent.futures 模块能特别轻松地把基于线程的方案转成基于进程的方案。**
+
+而对于下载国旗的示例或其它 I/O 密集型作业使用ProcessPoolExecutor 类得不到任何好处，对于简单用途来说，这两个 Executor 接口的类唯一值得注意的区别是 `ThreadPoolExecutor.__init__` 方法需要 max_workers 参数指定线程池中线程的数量，而在ProcessPoolExecutor 类中，那个参数是可选的，而且大多数情况下不使用——默认值是`os.cpu_count()`函数返回的 CPU 数量。这样处理说得通，因为对 CPU 密集型的处理来说，不可能要求使用超过 CPU 数量的进程；而对 I/O 密集型处理来说，可以在一个ThreadPoolExecutor 实例中使用10个、100个或1000个线程，最佳线程数取决于做的是什么事，以及可用内存，因此要仔细测试才能找到最佳的线程数。
+
+
+
+而不适合使用ProcessPoolExecutor 或 ThreadPoolExecutor  类时的替代方案——threading 模块和 multiprocessing 模块。
+
+如果 ThreadPoolExecutor 类不够灵活，可能要使用 threading 模块中的组件(如Thread、lock、Semaphore 等)自行定制方案，比如使用 queue 模块创建线程安全队列，在线程之间传递数据。
+
+
+
+## 第十八章 使用 asyncio 包处理并发
+
+并发指一次处理多件事；并行是指一次做多件事。——Rob Pike(Go 语言的创造者之一)
+
+关键在于“是否同时”：
+
+* 在吃饭时，电话来了，停下吃饭去接电话，接完电话再吃完，这是并发。
+* 在吃饭时，电话来了，一边打电话一边吃饭，这是并行。
+
+**并发的关键是你有处理多个任务的能力，不一定要同时。并行的关键是你有同时处理多个任务的能力。**
+
+
+
+用asyncio.create_task()方法将Coroutine（协程）封装为Task（任务）。一般用于实现异步并发操作。需要注意的是，只有在当前线程存在事件循环的时候才能创建任务（Task）。
+
+```Python
+import asyncio
+import itertools
+
+async def spin(msg):  # <1>
+    for char in itertools.cycle('|/-\\'):
+        status = char + ' ' + msg
+        print(status, flush=True, end='\r')
+        try:
+            await asyncio.sleep(.1)  # <2>
+        except asyncio.CancelledError:  # <3>
+            break
+    print('\n',22222)
+
+async def slow_function():  # <4>
+    # pretend waiting a long time for I/O
+    await asyncio.sleep(3)  # <5>
+    return 42
+
+async def supervisor():  # <6>
+    spinner = asyncio.create_task(spin('thinking!'))  # <7>
+    print('spinner object:', spinner)  # <8>
+    result = await slow_function()  # <9>
+    spinner.cancel()  # <10>
+    return result
+
+def main():
+    result = asyncio.run(supervisor())  # <11>
+    print('Answer:', result)
+
+# main()
+```
+
+
+
+## 第19章 动态属性和特性
 

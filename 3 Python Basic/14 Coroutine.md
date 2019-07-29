@@ -29,6 +29,7 @@ async def hello(i):
 async def main():
     a = time.time()
     # 再多加几个 task 耗时相同
+    # 这里不能直接写成两行： await asyncio.create_task
     t1 = asyncio.create_task(hello(1))
     t2 = asyncio.create_task(hello(2))
     await t1 # awaited to wait until it is complete
