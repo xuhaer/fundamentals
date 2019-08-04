@@ -457,7 +457,7 @@ d # {'a': 'foo'}
 * d 是 dict 的实例，使用 ad 中的值更新 d。
 * dict.update 方法忽略了`AnswerDict.__getitem__`方法。
 
-直接子类化内置内型（如 dict、list 或 str）容易出错，因为内置类型的方法通常会忽略用户覆盖的方法。不要子类化内置类型，用户自定的类应该继承 collections 模块。例如 [`UserDict`](https://docs.python.org/3/library/collections.html#collections.UserDict)、[`UserList`](https://docs.python.org/3/library/collections.html#collections.UserList)、[`UserString`](https://docs.python.org/3/library/collections.html#collections.UserString)等。如果将上例继承自 UserDict 则bu'h不会存在上面诡异的现象。
+直接子类化内置内型（如 dict、list 或 str）容易出错，因为内置类型的方法通常会忽略用户覆盖的方法。不要子类化内置类型，用户自定的类应该继承 collections 模块。例如 [`UserDict`](https://docs.python.org/3/library/collections.html#collections.UserDict)、[`UserList`](https://docs.python.org/3/library/collections.html#collections.UserList)、[`UserString`](https://docs.python.org/3/library/collections.html#collections.UserString)等。如果将上例继承自 UserDict 则不会存在上面诡异的现象。
 
 
 
@@ -516,7 +516,7 @@ else:
     after_call()
 ```
 
-现在很明确，try 防守的是 dangerous_call() 可能出现的错误，而不是 after_call()。而且很明显，只有 try 块不抛出异常，才会执行 agfter_call()。
+现在很明确，try 防守的是 dangerous_call() 可能出现的错误，而不是 after_call()。而且很明显，只有 try 块不抛出异常，才会执行 after_call()。
 
 
 
@@ -630,11 +630,9 @@ Out[63]: 'GEN_CLOSED'
 
 在 `flags_threadpool.py、flags_asyncio.py`的实例后，有一注解：
 
-> 全局解释器锁(GIL)，这是 CPython 解释器的局限，与 Python 语言本身无关。Jython 和 IronPython 没有这种限制。不过，目前最快的Python 解释器 PyPy 也有 GIL。
+> 全局解释器锁(GIL)，这是 CPython 解释器的局限，与 Python 语言本身无关。Jython 和 IronPython 没有这种限制。不过，目前最快的Python 解释器 PyPy 也有 GIL。**然而，标准库中所有执行阻塞型 I/O 操作的函数，在等待操作系统返回结果时都会释放 GIL，允许其他线程进行。time.sleep()函数也会释放 GIL。因此尽管有 GIL，Python 线程还是能在 I/O 密集型应用中发挥作用。**
 
 这个与语言本身无关倒是我一直以来的误解。
-
-**然而，标准库中所有执行阻塞型 I/O 操作的函数，在等待操作系统返回结果时都会释放 GIL，允许其他线程进行。time.sleep()函数也会释放 GIL。因此尽管有 GIL，Python 线程还是能在 I/O 密集型应用中发挥作用。**
 
 
 
