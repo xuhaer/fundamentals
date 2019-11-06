@@ -320,3 +320,156 @@ with resources.open_text("app1", "somefile") as f:
 print(resources.read_text("app1", "somefile"))
 ```
 
+
+
+# Some useful features in Python3.8
+
+
+
+## 赋值表达式
+
+新增一个新的赋值语法`:=`，它将赋给左边变量并将赋值语句转换成一个表达式。
+
+```python
+if (n := len(a)) > 10:
+    print(f"List is too long ({n} elements, expected <= 10)")
+
+# 等价于：
+n = len(a)
+if n > 10:
+    pass
+
+while (block := f.read(256)) != '':
+    process(block)
+```
+
+另一个值得介绍的用例出现于列表推导式中，在筛选条件中计算一个值，而同一个值又在表达式中需要被使用:
+
+```python
+[int(n) for n in ['1', '2', '3'] if (int(n) > 1)] # 需两次计算int(n)
+# 现在可以用：
+[int_n for n in ['1', '2', '3'] if (int_n := int(n)) > 1]
+```
+
+
+
+## 仅限位置形参
+
+一般来说，Python中的参数传递有三种形式：位置参数、关键字参数和可变参数，为了避免不必要的麻烦，规定在可变参数之后只允许使用关键字参数。可是即便如此还是给程序员们留下了很大的自由空间，比如在可变参数之前，位置参数和关键字参数的使用几乎不受限制。这样就出现了一个问题，假如一个团队中很多人进行合作开发，函数的定义形式和调用模式是很难规范和统一的。
+
+因此Python3.8就引入了一个“Positional-Only Argument”的概念和分隔符“/”，在分隔符“/”左侧的参数，只允许使用位置参数的形式进行传递。
+
+```python
+def foo(a, b, c=1, /, d=100, *, e):
+    '''a 和 b 强制位置参数，e 为强制关键字参数'''
+    print(a, b, c, d, e)
+
+foo(1, 2, c=2) # TypeError:...
+foo(1, 2, e=3) # valid
+```
+
+这种标记形式的一个用例是它允许纯 Python 函数完整模拟现有的用 C 代码编写的函数的行为。
+
+另一个用例是在不需要形参名称时排除关键字参数。 
+
+另一个益处是将形参标记为仅限位置形参将允许在未来修改形参名而不会破坏客户的代码。
+
+
+
+## 跨进程内存共享
+
+以往跨进程共享得使用Queue、Pipes等方式来实现，数据无法直接共享。
+
+**在Python 3.8中，multiprocessing模块提供了SharedMemory类，可以在不同的Python进程之间创建共享的内存block**。一个简单的例子如下：
+
+打开一个ipython：
+
+```python
+from multiprocessing import shared_memory
+
+a = shared_memory.ShareableList([1, 'a'])
+a # ShareableList([1, 'a'], name='psm_c71544cf')
+```
+
+打开另一个ipython，将上面ShareableList 的 name 复制到下面代码：
+
+```python
+from multiprocessing import shared_memory
+
+b = shared_memory.ShareableList(name='psm_c71544cf')
+b # ShareableList([1, 'a'], name='psm_c71544cf')
+```
+
+
+
+## f-string 对`=`的支持
+
+Python3.8对形式为 `f'{expr=}'` 的 f-字符串将扩展表示为表达式文本，加一个等于号，再加表达式的求值结果。可用于自动记录表达式和调试文档。
+
+```python
+x = 2
+print(f'{x * 2 = }') # x * 2 = 4
+```
+
+
+
+## importlib.metadata 读取第三方包的元数据
+
+```python
+from importlib.metadata import version, files, requires
+
+version('ipython') # '7.9.0'
+requires('ipython')[:2] # ['setuptools (>=18.5)', 'jedi (>=0.10)']
+```
+
+
+
+## functools 中的几点改变
+
+#### 新增缓存属性(`functools.cached_property`):用于在实例生命周期内缓存的已计算特征属性。
+
+```python
+from functools import cached_property
+
+class Bar:
+    
+    @cached_property
+    def cached_(self):
+        print('not cached!')
+        return 'some value'
+
+b = Bar()
+b.cached_ # print('not cached!')
+b.cached_ # not print('not cached!')
+```
+
+
+
+#### functools.lru_cache 作为装饰器时可以不加参数
+
+​	略
+
+
+
+#### functools.singledispatchmethod 装饰器可使用 single dispatch 将方法转换为 泛型函数(参见[笔记](https://github.com/xuhaer/fundamentals/blob/master/60%20%E5%85%B6%E4%BB%96%E4%B9%A6%E7%B1%8D/32%20Fluent%20Python.md#782-%E5%8D%95%E5%88%86%E6%B4%BE%E6%B3%9B%E5%87%BD%E6%95%B0)):
+
+```python
+from functools import singledispatchmethod
+from contextlib import suppress
+
+class TaskManager:
+
+    def __init__(self, tasks):
+        self.tasks = list(tasks)
+
+    @singledispatchmethod
+    def discard(self, value):
+        with suppress(ValueError):
+            self.tasks.remove(value)
+
+    @discard.register(list)
+    def _(self, tasks):
+        targets = set(tasks)
+        self.tasks = [x for x in self.tasks if x not in targets]
+```
+

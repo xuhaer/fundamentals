@@ -278,13 +278,13 @@ avg(20) # 20.0
 ### 7.8 标准库中的装饰器
 
 #### 使用functools.lru_cache(Least Recently Used) 做备忘
-
+python3.8 中可直接作为装饰器而不是作为返回装饰器的函数，因此现在`@lru_cache`和`@lru_cache()` 两种写法都合法。
 生成第 n 个斐波拉契数这种慢速递归函数适合用 lru_cache，如下：
 
 ```Python
 from functools import lru_cache
 
-@lru_cache() # 注意
+@lru_cache
 def fib(n):
     if n < 2:
         return n
@@ -305,7 +305,7 @@ Wall time: 26 µs
 Out[25]: 9227465
 ```
 
-需要注意的是，必须像常规函数那样调用 lru_cache, 上面是 `@lru_cache()`，因为 lru_cache  可以接受配置参数:
+lru_cache  可以接受配置参数:
 
 `lru_cache(maxsize=128, typed=False)`
 
