@@ -14,11 +14,11 @@ EXPLAIN命令是查看查询优化器如何决定执行查询的主要方法。�
 * 它并不支持存储过程,尽管可以手动抽取查询并单独地对其进行 EXPLAIN操作。
 * 它并不会告诉你 MySQL在查询执行中所做的特定优化。
 * 它并不会显示关于查询的执行计划的所有信息( MySQL开发者会尽可能增加更多信息)
-* 它并不区分具有相同名字的事物。例如,它对内存排序和临时文件都使用 "filesort", 并且对于磁盘上和内存中的临时表都显示“ Using temporary”。
+* 它并不区分具有相同名字的事物。例如,它对内存排序和临时文件都使用 "filesort", 并且对于磁盘上和内存中的临时表都显示"Using temporary"。
 
 ## 重写非 SELECT查询(MySQL 5.6 允许解释非 SELECT 查询)
 
-MySQL EXPLAIN只能解释 SELECT查询,并不会对存储程序调用和 INSERT、 UPDATE、DELETE或其他语句做解释。然而,你可以重写某些非 SELECT查询以利用 EXPLAIN。为了达到这个目的,只需要将该语句转化成一个等价的访问所有相同列的 SELECT。任何提及的列都必须在 SELECT列表,关联子句,或者WERE子句中。
+MySQL EXPLAIN只能解释 SELECT查询,并不会对存储程序调用和 INSERT、 UPDATE、DELETE或其他语句做解释。然而,你可以重写某些非 SELECT查询以利用 EXPLAIN。为了达到这个目的,只需要将该语句转化成一个等价的访问所有相同列的 SELECT。任何提及的列都必须在 SELECT列表,关联子句,或者WHERE子句中。
 
 ## EXPLAIN 中的列
 
@@ -38,3 +38,16 @@ EXPLAIN 的输出总是有相同的列，可变的是行数及内容。
 mysql> EXPLAIN SELECT (SELECT 1 FROM actor LIMIT 1) FROM film;
 ```
 
+
+### select_type列
+
+这一列显示了对应行是简单还是复杂 SELECT(如果是后者,那么是三种复杂类型中的哪种)。SIMPLE值意味着查询不包括子査询和 UNION。如果查询有仼何复杂的子部分,则最外层部分标记为 PRIMARY,其他部分标记如下。
+- SUBQUERY: 包含在 SELECT列表中的子查询中的 SELECT(换句话说,不在FROM子句中)标记为SUBQUERY。
+- DERIVED: DERIVED值用来表示包含在FROM子句的子查询中的 SELECT, MySQL会递归执行并将结果放到一个临时表中。服务器内部称其“派生表”,因为该临时表是从子查询中派生来的。
+- UNION: 在UNI0N中的第二个和随后的 SELECT被标记为UNI0N。
+- UNION RESULT: 用来从 UNION的匿名临时表检索结果的 SELECT被标记为 UNION RESULT。
+
+除了这些值, SUBQUERY和UNION还可以被标记为 DEPENDENT和 UNCACHEABLE。 DEPENDENT 意味着 SELECT依赖于外层查询中发现的数据; UNCACHEABLE意味着 SELECT中的某些特性阻止结果被缓存于一个 Item cache中。
+
+### table 列
+这一列显示了对应正在访问哪个表。

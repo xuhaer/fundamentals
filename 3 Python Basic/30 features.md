@@ -265,3 +265,58 @@ def __init__(name: str, nationality: Any = 'China', sex: str):
 
 另一件需要注意的是字段在子类中的排序方式。 从基类开始，字段按照首次定义的顺序排序。 如果在子类中重新定义字段，则其顺序不会更改。
 
+
+
+
+## breakpoint 函数
+
+在Python3.7中新增了内置的"断点"函数`breakpoint()`,可以使得调试器更加直观和灵活，比如在服务器上完成一些简单的调试工作。
+
+```python
+def foo(a, b):
+    breakpoint()
+    return a / b
+
+foo(1, 0)
+```
+
+当脚本运行到 `breakpoint()` 的位置时会中断， 进入一个 PDB 的调试会话。你可以敲 `c` 然后回车使脚本继续。
+
+- `n` (next)
+- `s` (step)
+
+如果我们在代码里加上`breakpoint()`后却不想让它在此中断执行呢？ 可以带上新的`PYTHONBREAKPOINT=value` 实现一些特定的功能。
+
+- `PYTHONBREAKPOINT=0` 停止中断执行(相当于忽略`breakpoint()`函数)
+
+- `PYTHONBREAKPOINT=第三方callable`，每次执行到`breakpoint()`时会自动调用第三方的`callable()`。
+
+  这样的话，你就可以用pudb(全屏的基于控制台的可视化调试器)、web-pdb(网络浏览器中远程调试 python 脚本)
+
+```python
+PYTHONBREAKPOINT=web_pdb.set_trace python ex1.py
+```
+
+
+
+## 使用importlib.resources 导入数据文件
+
+This module leverages Python’s import system to provide access to *resources* within *packages*. **If you can import a package, you can access resources within that package**. Resources can be opened or read, in either binary or text mode.
+
+在python项目中，以往可能通过类似于`HERE = os.path.dirname(__file__)`这样的方式来定位文件路径，使用 `__file__` 具备了可移植性，但是如果 Python 项目被以一个 zip 文件安装，它就没有 `__file__` 属性了。不过现在我们有更好的处理方式了。
+
+比如一个django项目:
+
+```python
+'''
+from app1 import somefile 能运行
+'''
+
+from importlib import resources
+
+with resources.open_text("app1", "somefile") as f:
+    print(f.read())
+
+print(resources.read_text("app1", "somefile"))
+```
+
