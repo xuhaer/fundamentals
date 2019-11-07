@@ -46,9 +46,9 @@ u == User('name', 170, 50) # False
 
 其实，`dataclass` 类不仅默认实现了`__repr__()`方法用来提供一个比较好的字符串表示方式(`dataclass` 类不实现 `__str__()` 方法，因此Python将返回到 `__repr__()` 方法。)，还实现了`__eq__()`方法以供基本对象之间的比较。此外，还有以下特性:
 
--   `dataclass` 类允许对象排序
--   可以表示不可变数据
--   像普通类一样可以继承
+- `dataclass` 类允许对象排序
+- 可以表示不可变数据
+- 像普通类一样可以继承
 
 
 
@@ -91,6 +91,8 @@ class User:
 如果我们想基于某个可变类作为默认参数该怎么办呢？你可能想:
 
 ```python
+from typing import List
+
 @dataclass
 class AllUser:
     users: List[User] = [User(height) for height in [170, 175]]
@@ -103,7 +105,6 @@ class AllUser:
 
 ```python
 from dataclasses import dataclass, field
-from typing import List
 
 def make_users():
     return [User(height) for height in [170, 175]]
@@ -178,7 +179,8 @@ class AllUser:
     users: List[User] = field(default_factory=make_users)
 
     def __repr__(self):
-        users = ', '.join(f'{u!s}' for u in self.users) # `!s` 显式地使用 str() 
+        # 转换符 '!s' 即对结果调用 str()，'!r' 为调用 repr()，而 '!a' 为调用 ascii()。
+        users = ', '.join(f'{u!s}' for u in self.users)
         return f'{self.__class__.__name__}({users})'
 
 AllUser() # much better
@@ -221,19 +223,31 @@ User('1', 170) < User('2', 180) # True
 ```python
 @dataclass(order=True)
 class User:
-  	sort_index: int = field(init=False, repr=False)
+    '''仅对身高字段进行排序'''
+    name: str = field(compare=False)
+    height: float
+    weight: float = field(default=50, compare=False)
+    nationality: Any = field(default='China', compare=False)
+
+User('3', 170) < User('2', 180) # True
+
+@dataclass(order=True)
+class User:
+    '''用`__post_init__` 来做更复杂的比较'''
+    sort_index: int = field(init=False, repr=False)
     name: str
     height: float
-    weight: float = 50.5
+    weight: float = 50
     nationality: Any = 'China'
       
     def __post_init__(self):
-        self.sort_index = (RANKS.index(self.rank))
+        '''根据bmi来比较'''
+        self.sort_index = self.weight / (self.height / 100)**2
 
-User('2', 170) < User('2', 180) # True
+User('3', 180, 50) < User('2', 170, 50) # True
 ```
 
-注意： `sort_index` 作为类的第一个字段添加。这样，才能首先使用 `sort_index` 进行比较，并且只有在还有其他字段的情况时才能生效。使用 `field()` ，还必须指定 `sort_index` 不应作为参数包含在 `__init__()` 方法中(因为它是根据 *rank* 和 *suit* 字段计算的)。为避免让使用者对此实现细节感到困惑，从类的 *repr* 中删除 `sort_index` 可能也是个好主意。
+注意： `sort_index` 作为类的第一个字段添加。这样，才能首先使用 `sort_index` 进行比较，并且只有在还有其他字段的情况时才能生效。使用 `field()` ，还必须指定 `sort_index` 不应作为参数包含在 `__init__()` 方法中。为避免让使用者对此实现细节感到困惑，从类的 *repr* 中删除 `sort_index` 可能也是个好主意。
 
 
 
@@ -258,7 +272,7 @@ class SubUser(User):
 
 ```python
 def __init__(name: str, nationality: Any = 'China', sex: str):
-    ...
+    pass
 ```
 
 所以，**如果基类中的字段具有默认值，那么子类中添加的所有新字段也必须具有默认值。**
@@ -291,7 +305,7 @@ foo(1, 0)
 
 - `PYTHONBREAKPOINT=第三方callable`，每次执行到`breakpoint()`时会自动调用第三方的`callable()`。
 
-  这样的话，你就可以用pudb(全屏的基于控制台的可视化调试器)、web-pdb(网络浏览器中远程调试 python 脚本)
+这样的话，你就可以用pudb(全屏的基于控制台的可视化调试器)、web-pdb(网络浏览器中远程调试 python 脚本)
 
 ```python
 PYTHONBREAKPOINT=web_pdb.set_trace python ex1.py
@@ -355,7 +369,7 @@ while (block := f.read(256)) != '':
 
 ## 仅限位置形参
 
-一般来说，Python中的参数传递有三种形式：位置参数、关键字参数和可变参数，为了避免不必要的麻烦，规定在可变参数之后只允许使用关键字参数。可是即便如此还是给程序员们留下了很大的自由空间，比如在可变参数之前，位置参数和关键字参数的使用几乎不受限制。这样就出现了一个问题，假如一个团队中很多人进行合作开发，函数的定义形式和调用模式是很难规范和统一的。
+一般来说，Python中的参数传递有三种形式：位置参数、可变参数和关键字参数，为了避免不必要的麻烦，规定在可变参数之后只允许使用关键字参数。可是即便如此还是给程序员们留下了很大的自由空间，比如在可变参数之前，位置参数和关键字参数的使用几乎不受限制。这样就出现了一个问题，假如一个团队中很多人进行合作开发，函数的定义形式和调用模式是很难规范和统一的。
 
 因此Python3.8就引入了一个“Positional-Only Argument”的概念和分隔符“/”，在分隔符“/”左侧的参数，只允许使用位置参数的形式进行传递。
 
@@ -426,7 +440,7 @@ requires('ipython')[:2] # ['setuptools (>=18.5)', 'jedi (>=0.10)']
 
 ## functools 中的几点改变
 
-#### 新增缓存属性(`functools.cached_property`):用于在实例生命周期内缓存的已计算特征属性。
+#### 新增缓存属性(`functools.cached_property`):用于在实例生命周期内缓存已计算特征属性。
 
 ```python
 from functools import cached_property
