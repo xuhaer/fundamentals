@@ -1,3 +1,6 @@
+# [麻省理工学院:计算机科学与 Python 编程导论](https://courses.edx.org/courses/course-v1:MITx+6.00.1x_7+3T2015/course/)
+虽然该课程的教学语言为 Python，但作为一门优秀的导论课，它强调学习计算机科学领域里的重要概念和范式，而不仅仅是教你特定的语言。 如果你不是科班生，这能让你在自学时开阔眼界; 课程内容:计算概念，Python 编程语言，一些简单的数据结构与算法，测试与调试。
+
 ## Week 1 
 
 Goals:
@@ -6,7 +9,7 @@ Goals:
 
 * Learn computational modes of thinking
 
-  ​
+  
 
 
 
@@ -18,7 +21,6 @@ Goals:
 
 * Remember results
 
-  ​
 
 
 
@@ -64,7 +66,7 @@ Aspects of languages
 
 * Semantics: Assigns a meaning to a legal sentence
 
-  ​
+
 
 ### Where can things go wrong?
 
@@ -143,7 +145,7 @@ Complexity: Use `Big O` notation
 
 
 
-![相关图片](./complexities.png)
+![相关图片](./figure/complexities.png)
 
 
 
