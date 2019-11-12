@@ -169,3 +169,49 @@ RUN yum update && yum install -y python3 python3-devel gcc && \
 - 通过 ubuntu:18.04 基础镜像搭建，优点是方便快捷，唯一缺点是python版本不可控。
 - 够丧心病狂的话可以在生产环境(requirements.txt 包几乎不变)`pip install -r requirements.txt`后卸载 pip(限基础镜像里不包含pip的): `apt purge --auto-remove -y python3-pip && apt clean && rm -f xxx `， 能省出200多MB 空间(没记错的话)。
 
+
+
+## redis镜像
+
+使用 redis:5.0-alpine 为基础镜像并挂载配置文件和data文件。
+
+首先，在服务器(或本机)起一个docker 的 redis 实例：
+```bash
+docker run -d \
+-p 6379:6379 \
+--name my_redis \
+-v $PWD/redis_data:/data:rw \
+-v $PWD/conf/redis.conf:/etc/redis/redis.conf:ro \
+--privileged=true \
+redis:5.0-alpine \
+redis-server /etc/redis/redis.conf --requirepass "123321" 
+
+其中：
+--requirepass 不能少，奇怪！conf里不是已经定义了密码了吗？？
+-v: 映射数据目录 rw 为读写, 挂载配置文件 ro 为readonly
+--privileged=true: 给与一些权限
+```
+
+然后，在本机上就可以远程连接服务器上的redis了(控制台允许6379端口)：`47.100.138.140` 为服务器ip。
+
+```bash
+docker run -it --rm redis:5.0-alpine redis-cli -h 47.100.138.140 -p 6379
+KEYS * # (error) NOAUTH Authentication required.
+auth 123321
+```
+
+若要在服务器的另一个docker 实例中连接该redis，有两种方法：感觉都不太好，正确都处理方式应该是通过 docker-compose 吗？
+
+```bash
+# 直接连 -h localhost -p 6379 连接不成功，有点不解。
+# 方法一：先取得该实例的ip: 
+inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my_redis
+# 得到：172.18.0.2
+# 然后重启一个redis 实例，运行 `redis-cli -h 172.18.0.2 -p 6379` 即可。
+docker run -it --rm redis:5.0-alpine redis-cli -h 172.18.0.2 -p 6379
+
+# 方法二：docker容器内可通过 --link （--link 官方不推荐使用）
+docker run -it --link my_redis:my_redis --rm redis:5.0-alpine redis-cli -h my_redis -p 6379
+KEYS * # (error) NOAUTH Authentication required.
+auth 123321
+```
