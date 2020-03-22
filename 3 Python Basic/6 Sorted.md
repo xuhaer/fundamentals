@@ -25,6 +25,7 @@
     Student('jane', 'B', 12),
     Student('dave', 'B', 10),
 ]
+# attrgetter: 764ns, lambda: 804ns
 >>> sorted(student_objects, key=attrgetter('age')) # 也可用`sorted(student_objects, key=lambda S: S.age)`
 [('dave', 'B', 10), ('jane', 'B', 12), ('john', 'A', 15)]
 ```
@@ -33,6 +34,7 @@ methodcaller函数可以让元素调用一个方法，然后按方法的返回�
 
 ```python
 >>> words = ['b', 'a', 'abase', 'alfalfa']
+# methodcaller: 1.31µs, lambda: 1.56 µs
 >>> sorted(words, key=methodcaller('count', 'a'))  # 方法为字符串形式!!
 ['b', 'a', 'abase', 'alfalfa']
 # 其等价于:

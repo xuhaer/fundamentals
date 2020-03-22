@@ -36,15 +36,15 @@ async def main():
     await t2 # 也可取消掉
     print(f'用时{time.time() - a}秒')
 
-
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 结果:
 
 ```python
 Hello world!
-Hello world!
+Hello world! # 这行之后会等待 1 秒
 task 1 filished
 task 2 filished
 用时1.0046730041503906秒
@@ -64,7 +64,7 @@ task 2 filished
 
 
 ### 运行 asyncio 程序
-`asyncio.``run`(*coro*, ***, *debug=False*)
+`asyncio.run`(*coro*, ***, *debug=False*)
 
 此函数运行传入的协程，负责管理 asyncio 事件循环并 *完结异步生成器*。
 
@@ -74,7 +74,7 @@ task 2 filished
 
 ### 创建任务
 
-`asyncio.``create_task`(*coro*)
+`asyncio.create_task`(*coro*)
 
 将 *coro* [协程](https://docs.python.org/zh-cn/3/library/asyncio-task.html#coroutine) 打包为一个 [`Task`](https://docs.python.org/zh-cn/3/library/asyncio-task.html#asyncio.Task) 排入日程准备执行。返回 Task 对象
 

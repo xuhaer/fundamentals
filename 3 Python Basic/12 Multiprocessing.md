@@ -12,7 +12,7 @@ def t1(q):
     print(f'my id is {os.getpid()}')
 
 def t2(q):
-    s = q.get(os.getpid())
+    s = q.get()
     time.sleep(2)
     print(f'my id is {os.getpid()},my sibings is:{s}')
 
@@ -21,6 +21,10 @@ p1 = Process(target=t1, args=(q,))
 p2 = Process(target=t2, args=(q,))
 p1.start()
 p2.start()
+p1.join()
+p2.join()
+p1.close()
+p2.close()
 ```
 
 通过往Queue实例中 put 数据和 get 数据从而达到交换数据。
@@ -40,7 +44,7 @@ my id is 82361,my sibings is:82360
 
 Pool类的几个方法:
 
-* `apply_async(func[, args=()[, kwds={}]])`: 非阻塞、支持结果返回进行回调
+* `apply_async(func[, args=()[, kwargs={}]])`: 非阻塞、支持结果返回进行回调
 * ` map(func, iterable[, chunksize=None])`: 与内置的map函数用法行为基本一致，它会使进程阻塞直到返回结果。注意，虽然第二个参数是一个迭代器，但在实际使用中，必须在整个队列都就绪后，程序才会运行子进程。
 * `close()`:关闭进程池（pool），使其不在接受新的任务。
 * `terminate()`: 结束工作进程，不在处理未处理的任务。
@@ -59,7 +63,7 @@ def main(x):
     pool = Pool(x) # Pool的默认大小是CPU的线程数
     # 如果池满，请求就会等待，直到池中有进程结束，才会创建新的进程来执行这些请求。 
     # 比如当池的大小为4而range(5)的时候
-    print(pool.map(task, range(5)的时候))
+    pool.map(task, range(5))
     print(f'Pool 池指定数量:{x}, 用时{time.time() - a }')
 
 main(4)
@@ -70,11 +74,8 @@ main(10)
 结果:
 
 ```python
-[0, 2, 4, 6, 8]
 Pool 池指定数量:4, 用时2.052304267883301
-[0, 2, 4, 6, 8]
 Pool 池指定数量:5, 用时1.0146291255950928
-[0, 2, 4, 6, 8]
 Pool 池指定数量:10, 用时1.0229480266571045
 ```
 
@@ -89,7 +90,7 @@ from multiprocessing import Pool
 
 def task(n):
     time.sleep(1)
-    return subprocess.call(['echo', n])
+    return n
 
 def main(x):
     a = time.time()
@@ -108,11 +109,11 @@ main(10)
 结果:
 
 ```python
-[0, 2, 4, 6, 8]
+[0, 1, 2, 3, 4]
 Pool 池指定数量:4, 用时2.114387035369873
-[0, 2, 4, 6, 8]
+[0, 1, 2, 3, 4]
 Pool 池指定数量:5, 用时1.0569658279418945
-[0, 2, 4, 6, 8]
+[0, 1, 2, 3, 4]
 Pool 池指定数量:10, 用时1.0654759407043457
 ```
 

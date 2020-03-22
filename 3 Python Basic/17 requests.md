@@ -7,17 +7,14 @@
 
 >>> d = {'a': 1, 'b': 2}
 >>> requests.post("http://localhost:8765", data=d)
-^C
 >>> j = json.dumps(payload)
 >>> requests.post("http://localhost:8765", data=j)
-^C
 ```
-若传递给 data 字段为一个字典，那么 request body 的 Content-Type为`application/x-www-form-urlencoded`: `a=1&b=2`
 
-如果直接传递一个字符串，其将没有明确的Content-Type 字段:
-{"a": 1, "b": 2}
+- 不管json是str还是dict，如果不指定headers中的content-type，默认为application/json
+- data为dict时，如果不指定content-type，默认为application/x-www-form-urlencoded，相当于普通form表单提交的形式，此时数据可以从request.POST里面获取，而request.body的内容则为a=1&b=2的这种形式，注意，即使指定content-type=application/-json，request.body的值也是类似于a=1&b=2，所以并不能用json.loads(request.body.decode())得到想要的值
+- data为str时，如果不指定content-type，默认为application/json
 
-上面的第二种方式也可以更明确地直接传递 `requests.post("http://localhost:8765", json=d)`
 
 Background: In the `prepare_body `method of requests a dictionary is explicitely converted to json and a content-header is also automatically set:
 
@@ -27,7 +24,7 @@ if not data and json is not None:
         body = complexjson.dumps(json)
 ```
 
-试过过程又遇到一个问题：如果 data 中是一个镶嵌的字典而content_type 是x-www-form-urlencoded 呢？ 只需要将为 dict 的value dumps 一下: [查看链接](https://github.com/kennethreitz/requests/issues/2885)
+过程又遇到一个问题：如果 data 中是一个镶嵌的字典而content_type 是x-www-form-urlencoded 呢？ 只需要将为 dict 的value dumps 一下: [查看链接](https://github.com/kennethreitz/requests/issues/2885)
 ```Python
 d = {'a': 1, 'b': {'b1': 1, 'b2': 2}}
 data = {'a': 1, 'b': json.dumps({'b1': 1, 'b2': 2})}

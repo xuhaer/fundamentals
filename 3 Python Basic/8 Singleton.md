@@ -1,6 +1,6 @@
 单例是一种**设计模式**，应用该模式的类只会生成一个实例。
 
-单例模式保证了在程序的不同位置都**可以且仅可以取到同一个对象实例**：如果实例不存在，会创建一个实例；如果已存在就会返回这个实例。因为单例是一个类，所以你也可以为其提供相应的操作方法，以便于对这个实例进行管理。
+单例模式保证了在程序的不同位置**可以且仅可以取到同一个对象实例**：如果实例不存在，会创建一个实例；如果已存在就会返回这个实例。因为单例是一个类，所以你也可以为其提供相应的操作方法，以便于对这个实例进行管理。
 
 
 
@@ -10,9 +10,9 @@
 def singleton(cls):
     _instance = {}
 
-    def inner():
+    def inner(*args, **kwargs):
         if cls not in _instance:
-            _instance[cls] = cls()
+            _instance[cls] = cls(*args, **kwargs)
         return _instance[cls]
     return inner
 
@@ -36,9 +36,9 @@ class Singleton:
         self._cls = cls
         self._instance = {}
 
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
         if self._cls not in self._instance:
-            self._instance[self._cls] = self._cls()
+            self._instance[self._cls] = self._cls(*args, **kwargs)
         return self._instance[self._cls]
 
 @Singleton
@@ -49,7 +49,10 @@ class Cls2:
 cls1 = Cls2()
 cls2 = Cls2()
 print(cls1 is cls2) # True
+hash(cls1) == hash(cls2) # True
 ```
+补充：从上面可以看出，默认的一个类是有一个default `__hash__` 方法的，其值是依据`id(类)` 算出来的。
+
 
 ## `__new__` 关键字(推荐)
 
@@ -62,11 +65,13 @@ class Single(object):
     _instance_lock = threading.Lock()
     _instance = None
     
-    def __new__(cls, *args, **kw):
+    def __new__(cls, *args, **kwargs):
         if cls._instance is None:
+            # with 语句相当于 lock.acquire() do something, 然后 lock.release()
             with cls._instance_lock:
+                # 在这个with 块的执行期间，其他所有with lock 的块都无法执行，除非等待该块执行完毕。
                 if cls._instance is None:
-            		cls._instance = object.__new__(cls, *args, **kw)
+            		cls._instance = object.__new__(cls, *args, **kwargs)
         return cls._instance
 
     def __init__(self):
@@ -86,6 +91,7 @@ print(single1 is single2) # True
 class Singleton(object):
     def foo(self):
         pass
+
 singleton = Singleton()
 ```
 

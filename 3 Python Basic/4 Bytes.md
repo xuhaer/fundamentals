@@ -82,3 +82,16 @@ b'\xe4\xbd'
 [1, 2]
 ```
 
+**补充** ord、hex、bytes、unicode
+
+```python
+# ord(): Return the Unicode code point for a one-character string.
+# chr(): Return a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.
+
+a = '你'
+ord(a) # 20320
+hex(ord(a)) # '0x4f60'
+f'{ord(a):x}' # '4f60'
+'\u4f60'.encode() # b'\xe4\xbd\xa0'
+a.encode() # b'\xe4\xbd\xa0'
+```

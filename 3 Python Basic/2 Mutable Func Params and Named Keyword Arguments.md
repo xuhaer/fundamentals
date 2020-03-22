@@ -46,19 +46,19 @@ person('Jack', job='Engineer')# Jack 23 Engineer
 参数组合:
 
 ```python
-def f1(a, b, c=0, *args, **kw):
-    print('a =', a, 'b =', b, 'c =', c, 'args =', args, 'kw =', kw)
+def f1(a, b, c=0, *args, **kwargs):
+    print('a =', a, 'b =', b, 'c =', c, 'args =', args, 'kwargs =', kwargs)
 
-def f2(a, b, c=0, *, d, **kw):
-    print('a =', a, 'b =', b, 'c =', c, 'd =', d, 'kw =', kw)
+def f2(a, b, c=0, *, d, **kwargs):
+    print('a =', a, 'b =', b, 'c =', c, 'd =', d, 'kwargs =', kwargs)
     
 
 args = (1, 2, 3, 4)
-kw = {'d': 99, 'x': '#'}
-f1(*args, **kw) # a = 1 b = 2 c = 3 args = (4,) kw = {'d': 99, 'x': '#'}
+kwargs = {'d': 99, 'x': '#'}
+f1(*args, **kwargs) # a = 1 b = 2 c = 3 args = (4,) kwargs = {'d': 99, 'x': '#'}
 
 args = (1, 2, 3)
-kw = {'d': 88, 'x': '#'}
-f2(*args, **kw) # a = 1 b = 2 c = 3 d = 88 kw = {'x': '#'}
+kwargs = {'d': 88, 'x': '#'}
+f2(*args, **kwargs) # a = 1 b = 2 c = 3 d = 88 kwargs = {'x': '#'}
 ```
 
