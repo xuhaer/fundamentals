@@ -1,7 +1,7 @@
 ## Python requests 库
 先在一个终端中打开输入: `nc -kl  8765` 
 
-```Python
+```python
 >>> import json
 >>> import requests
 
@@ -18,10 +18,10 @@
 
 Background: In the `prepare_body `method of requests a dictionary is explicitely converted to json and a content-header is also automatically set:
 
-```Python
+```python
 if not data and json is not None:
-        content_type = 'application/json'
-        body = complexjson.dumps(json)
+    content_type = 'application/json'
+    body = complexjson.dumps(json)
 ```
 
 过程又遇到一个问题：如果 data 中是一个镶嵌的字典而content_type 是x-www-form-urlencoded 呢？ 只需要将为 dict 的value dumps 一下: [查看链接](https://github.com/kennethreitz/requests/issues/2885)
