@@ -1,4 +1,6 @@
 Python的multiprocessing模块包装了底层的机制，提供了 Queue、Pipes等多种方式来交换数据:
+不管是多线程还是多进程，还是由concurrent.futures 来启动最便捷
+
 
 ```python
 import os

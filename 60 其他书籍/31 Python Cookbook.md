@@ -25,20 +25,20 @@ In [122]: %timeit list(map(max, zip(a,b)))
 1.77 µs ± 125 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 ```
 
-* 选出某字典最大的值(往往需要保留键的信息)：
+* 选出某字典最小的值(往往需要保留键的信息)：
 ```Python
 a = {'b': 1, 'c': 2, 'a': 3}
 
-In [163]: %timeit min(a.items(), key=lambda k: k[1])
+In [163]: %timeit min(a.items(), key=lambda k: k[1]) # ('b', 1)
 1.12 µs ± 60.8 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
-In [164]: %timeit min(a, key=lambda k: a[k])
+In [164]: %timeit min(a, key=lambda k: a[k]) # 'b'
 925 ns ± 5.16 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
-In [162]: %timeit min(zip(a.values(), a.keys())) # 优选
+In [162]: %timeit min(zip(a.values(), a.keys())) # (1, 'b') 优选
 870 ns ± 13.2 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
-In [161]: %timeit min(a, key=a.get) # 优选
+In [161]: %timeit min(a, key=a.get) # 'b'
 687 ns ± 8.63 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 ```
 需要注意的是在计算操作中使用到了 (值，键) 对。当多个实体拥有相同的值的时候，键会决定返回结果。比如，在执行 min() 和 max() 操作的时候，如果恰巧最小或最大值有重复的，那么拥有最小或最大键的实体会返回。
@@ -62,7 +62,7 @@ a.items() & b.items() # { ('y', 2) } 快于 `{item for item in b.items() if item
 ```
 * 键视图的一个很少被了解的特性就是它们也支持集合操作，比如 集合并、交、差运算。所以，如果你想对集合的键执行一些普通的集合操作，可以直接使用键视图对象而不用先将它们转换成一个 set。
 * 字典的 items() 方法返回一个包含 (键，值) 对的元素视图对象。这个对象同样也支持集合操作，并且可以被用来查找两个字典有哪些相同的键值对。
-* 尽管字典的 values() 方法也是类似，但是它并不支持这里介绍的集合操作。某种 程度上是因为值视图不能保证所有的值互不相同。
+* 尽管字典的 values() 方法也是类似，但是它并不支持这里介绍的集合操作。某种程度上是因为值视图不能保证所有的值互不相同。
 
 ### 1.13 在对字典排序或使用 min、max 时的 key 使用 itemgetter() 会比 lambda 表达式快。
 其他需要对不支持原生比较的对象排序的情况见 `6 Sorted.md`。
@@ -97,6 +97,7 @@ In [206]: %timeit sum(x * x for x in a) # 不需要写成 `sum((x * x for x in n
 现在有多个字典或者映射，你想将它们从逻辑上合并为一个单一的映射后执行某些操作，比如查找值或者检查某些键是否存在。
 a = {'x': 1, 'z': 3 }
 b = {'y': 2, 'z': 4 }
+
 ```Python
 from collections import ChainMap
 
@@ -107,12 +108,13 @@ print(c['z']) # Outputs 3 (from a) 重复键，那么第一次出现的映射值
 ```
 一个 ChainMap 接受多个字典并将它们在逻辑上变为一个字典(与 `a.update(b)` 不同)，ChainMap 类只是在内部创建了一个容纳这些字典的列表,并重新定义了一些常见的字典操作来遍历这个列表， 因此当 a、b 有更新时，c 也会即使更新。
 对于字典的更新或删除操作总是影响的是列表中第一个字典。比如:
+
 ```Python
 c['z'] = 33
 print(c) # ChainMap({'x': 1, 'z': 33}, {'y': 2, 'z': 4})
 print(a) # {'x': 1, 'z': 33}
 print(b) # {'y': 2, 'z': 4}
-del c['z']
+del c['z'] # 在此例中等同于: del a['z']
 ```
 
 ## 第二章:字符串和文本
@@ -121,8 +123,8 @@ del c['z']
 
 Pyhon 并没有特殊的语法来表示这些特殊的浮点值，但是可以使用 float() 来创建它们。比如:
 ```Python
-a = float('-inf')
-b = float('nan')
+a = float('-inf') # 等同于float('infinity')，且大小写不敏感
+b = float('nan') # 大小写不敏感
 
 # 检测
 import math
@@ -138,7 +140,7 @@ float('-inf') / float('-inf') # nan
 float('-inf') + float('inf') # nan
 # NaN 值一个特殊的地方是它们之间的比较操作总是返回 False。比如:
 float('nan') == float('nan') # False
-# 因此，测试 NaN 值的安全的方法就是 math.isnan()或 numpy(np.isnan())、pandas(pd.isna()),
+# 因此，测试 NaN 值的安全的方法就是 math.isnan()或 numpy(np.isnan())、pandas(pd.isna())
 ```
 
 ## 第四章：迭代器与生成器
@@ -146,8 +148,7 @@ float('nan') == float('nan') # False
 ### 4.14 展开嵌套的序列
 可以写一个包含 yield from 语句的递归生成器来轻松解决这个问题:
 ```Python
-from collections import Iterable
-
+from collections.abc import Iterable
 
 def flatten(items, ignore_types=(str, bytes)):
     for x in items:
@@ -157,8 +158,7 @@ def flatten(items, ignore_types=(str, bytes)):
             yield x
 
 items = [1, 2, [3, 4, [5, 6], 7], 8]
-# Produces 1 2 3 4 5 6 7 8
-list(flatten(items))
+list(flatten(items)) # [1, 2, 3, 4, 5, 6, 7, 8]
 ```
 语句 yield from 在你想在生成器中调用其他生成器的值的时候非常有用。 如果你不使用它的话，那么就必须写额外的 for 循环。比如:
 ```Python
@@ -213,8 +213,9 @@ class Date:
 
 关于 __slots__ 的一个常见误区是它可以作为一个封装工具来防止用户给实例增 加新的属性。尽管使用 slots 可以达到这样的目的，但是这个并不是它的初衷。__slots__ 更多的是用来作为一个内存优化工具。
 
-
 ### 8.24 让类支持比较操作
+
+补充：python3.7以后也可以用**dataclass**装饰器来完成
 
 你想让某个类的实例支持标准的比较运算 (比如 >=,!=,<=,< 等)，但是又不想去实现那一大堆的特殊方法。
 
@@ -442,8 +443,7 @@ import gzip
 import io
 import glob
 
-def find_robots(filename): '''
-    Find all of the hosts that access robots.txt in a single log file '''
+def find_robots(filename): 
     robots = set()
     with gzip.open(filename) as f:
         for line in io.TextIOWrapper(f,encoding='ascii'):
@@ -452,8 +452,7 @@ def find_robots(filename): '''
                 robots.add(fields[0]) return robots
     return robots
 
-def find_all_robots(logdir): '''
-    Find all hosts across and entire sequence of files '''
+def find_all_robots(logdir):
     files = glob.glob(logdir+'/*.log.gz')
     all_robots = set()
     for robots in map(find_robots, files):
@@ -470,7 +469,6 @@ if __name__ == '__main__':
 from concurrent import futures
 
 def find_robots(filename): 
-    '''Find all of the hosts that access robots.txt in a single log file'''
     robots = set()
     with gzip.open(filename) as f:
         for line in io.TextIOWrapper(f,encoding='ascii'):
