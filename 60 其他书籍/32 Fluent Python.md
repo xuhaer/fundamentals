@@ -61,11 +61,10 @@ t # (1, 2, [3, 4, 5, 6])
 ```
 至此，我们应该知晓：
 * 尽量不要把可变对象放在元组里。
-* 增量赋值不是一个原子操作。上例虽然抛出了异常，但还是完成了操作。
+* **增量赋值不是一个原子操作。上例虽然抛出了异常，但还是完成了操作。**
 
 ### 2.9 当列表不是首选时
 列表实在是太方便了，所以Python程序员可能会过度使用它。 在面对各类需求时，我们可能会有更好的选择，比如，要存放1000万个浮点数的话，数组(array)的效率要高得多；如果需要频繁对序列做先进先出的操作，deque(双端队列)的速度更快；如果包含操作的频率很高，那么使用 set(集合)会更合适，set 专为检查元素是否存在做过优化，虽然它并不是序列。
-
 
 **数组**
 如果我们需要一个只包含数字的列表，那么array.array 比 list 更高效。数组支持所有可变序列有关的操作，包括.pop、.insert 和 .extend。另外，数组还提供从文件读取和存入文件的更快的方法，如 .frombytes 和 .tofile。
@@ -74,6 +73,7 @@ Python 数组跟 C 语言数组一样精简。创建数组需要一个表示在�
 **队列**
 利用.append() 和.pop 方法，我们可以把列表当做栈和队列来用，但这样效率并不高。
 collection.deque 类(双向列队)是一个线程安全、可以快速从两端增删的数据类型。
+
 ```Python
 from collections import deque
 
@@ -82,7 +82,7 @@ dq.rotate(3)
 dq # deque([2, 3, 4, 0, 1])
 dq.appendleft(-1)
 dq # deque([-1, 2, 3, 4, 0])
-dq.extendleft([-3, -2]) # 注意
+dq.extendleft([-3, -2]) # 注意，extend的逻辑是 [.append(x) for x in [xxxx]]
 dq # deque([-2, -3, -1, 2, 3])
 ```
 当试图对一个已满的队列做尾部添加操作时，它头部的元素会被删除掉。
@@ -101,6 +101,7 @@ import sys
 
 sz = sys.getsizeof
 sz({i for i in range(100)}) / sz([i for i in range(100)]) # 9.2
+sz({i: str(i) for i in range(100)}) / sz([i for i in range(100)]) # 5.2
 sz({i for i in range(100000)}) / sz([i for i in range(100000)]) # 5.1
 
 nt = namedtuple('Container', ['name', 'date', 'foo', 'bar'])
@@ -155,6 +156,7 @@ upcase = methodcaller('upper') # callable
 upcase(s) # 'THE TIME HAS COME'
 
 hiphenate = methodcaller('replace', ' ', '-')
+# 这玩意竟然比s.replace(' ', '-') 还快一点！ why??
 hiphenate(s) # 'The-time-has-come'
 ```
 
@@ -253,7 +255,7 @@ avg = make_averager()
 avg(20) # UnboundLocalError: local variable 'cnt' referenced before assignment
 ```
 
-问题在于，当 cnt 为不可变类型时，cnt += 1 语句的作用于`cnt = cnt + 1`一样，这会把 cnt 变成局部变量，total 也类似，这样 count 就不是自由变量了，因此也不会保存在闭包中。而前一个例子没报错是因为我们并未给 goods_price 赋值，只是为其 .append，利用了列表是可变对象的这以事实。
+问题在于，当 cnt 为不可变类型时，cnt += 1 语句的作用于`cnt = cnt + 1`一样，这会把 cnt 变成局部变量，total 也类似，这样 count 就不是自由变量了，因此也不会保存在闭包中。而前一个例子没报错是因为我们并未给 goods_price 赋值，只是为其 .append，利用了列表是可变对象的这一事实。
 
 而 nonlocal 则会把变量标记为自由变量，即使在函数中为变量赋予新值了，也会变成自由变量，因此闭包中保存的绑定会更新：
 
@@ -537,7 +539,7 @@ def averager():
 ```Python
 In [42]: coro_avg = averager()
 
-In [43]: next(coro_avg) # 预激协程
+In [43]: next(coro_avg) # 预激协程,也可用coro_avg.send(None)
 
 In [44]: coro_avg.send(10)
 Out[44]: 10.0

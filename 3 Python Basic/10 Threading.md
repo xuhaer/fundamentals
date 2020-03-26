@@ -2,7 +2,7 @@
 
 多任务可以由多进程完成，也可以由一个进程内的多线程完成。
 
-不管是多线程还是多进程，还是由concurrent.futures 来启动最便捷
+不管是多线程还是多进程，还是由concurrent.futures 来启动最便捷,见 Fluent Python.md
 
 
 ```python
