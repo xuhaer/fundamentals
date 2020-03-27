@@ -34,7 +34,7 @@ def find_words_iter(text):
     for i, letter in enumerate(text):
         if letter == ' ':
             yield i + 1
-res = list(find_words_iter('An apple a day'))
+res = find_words_iter('An apple a day')
 ```
 
 ### 第 22 条：尽量使用辅助类来维护程序的状态，而不要用字典和元组
@@ -90,7 +90,7 @@ exam1.writing_grade = 50
 print(exam.writing_grade) # 50
 print(exam1.writing_grade) # 50
 ```
-不幸的是，对于writing_grade这个类的属性来说，所有的 Exam() 实例都要共享同一份 Grade 实例。而表示该属性的那个 Grade 实例，只会在程序的生命周期种构建一次。
+不幸的是，对于writing_grade这个类属性来说，所有的 Exam() 实例都要共享同一份 Grade 实例。而表示该属性的那个 Grade 实例，只会在程序的生命周期种构建一次。
 为了解决此问题，我们需要把每个 Exam 实例所对应的值记录到 Grade 中。下面这段代码，用字典来保存每个实例的状态。
 
 ```Python
@@ -109,7 +109,7 @@ class Grade:
 
 ```
 上面这种实现方式很简单，而且能够正确运作，但仍有问题，那就是会泄露内存。在程序的生命周期内，对于传给__set__方法的每个 Exam 实例来说，_grade 字典都会保存指向该实例的一份引用，这就导致该实例的引用计数无法降为0，从而使垃圾收集器无法将其回收。
-使用 Python 内置的 weakref 模块，即科解决此问题。该模块提供了名为 WeakKeyDictionary 的特殊字典，它可以取代_value 原来所用的普通字典。WeakKeyDictionary 的特殊之处在于：**如果运行期系统发现这种字典所特有的引用，是整个程序里面指向 Exam 实例的最后一份引用(没有指向 Exam 实例的强引用)**，那么，系统就会自动将该实例从字典的键中移除。Python 会做好相关的维护工作，以保证当程序不再使用任何 Exam 实例时，_value 字典会是空的。
+使用 Python 内置的 weakref 模块，即可解决此问题。该模块提供了名为 WeakKeyDictionary 的特殊字典，它可以取代_value 原来所用的普通字典。WeakKeyDictionary 的特殊之处在于：**如果运行期系统发现这种字典所特有的引用，是整个程序里面指向 Exam 实例的最后一份引用(没有指向 Exam 实例的强引用)**，那么，系统就会自动将该实例从字典的键中移除。Python 会做好相关的维护工作，以保证当程序不再使用任何 Exam 实例时，_value 字典会是空的。
 
 
 ### 第38条：在线程种使用 Lock 来防止数据竞争
@@ -118,6 +118,7 @@ class Grade:
 
 开发者可以用内置的 contextlib 模块来处理自己所编写的对象和函数，使他们能够支持 with 语句。该模块提供了名为 contextmanager 的修饰器。一个简单的函数，只需经过 contextmanager 的修饰，即可用在 with 语句中。
 典型用法：
+
 ```Python
 @contextmanager
 def some_generator(<arguments>):

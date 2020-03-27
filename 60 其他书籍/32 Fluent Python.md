@@ -95,6 +95,27 @@ extendleft(iter) 方法会把迭代器里的元素逐个添加倒双向列队的
 无论何时往字典里添加新的键，Python 解释器都可能做出为字典扩容的决定。因此，如果你在迭代一个字典的过程的同时对字典进行删除、添加操作时就可能会跳过一些键——甚至是跳过那些字典中已经有的键。
 因此，如果想要迭代并修改(指更改字典长度的操作)，最好分成两步来进行：首先对其迭代，以得到需要添加或删除的内容，结束后再对原有字典进行更新。
 
+补充：哪怕是list也一样，不要不迭代的时候改变其长度，如：
+
+```python
+In [47]: b
+Out[47]: [2, 3, 4, 5, 6]
+
+In [48]: for x in b:
+    ...:     print(x)
+    ...:     b.remove(x)
+    ...:     print(b)
+    ...:
+2
+[3, 4, 5, 6]
+4
+[3, 5, 6]
+6
+[3, 5]
+```
+
+
+
 另外，dict 和 set 背后的散列表效率很高，同时其效率是以牺牲空间为代价换来的：
 ```Python
 import sys
@@ -136,7 +157,7 @@ all([{}]) # False
 from functools import reduce
 
 def fact(n):
-    return reduce(lambda a,b: a*b, rang(1, n+1))
+    return reduce(lambda a,b: a*b, range(1, n+1))
 ```
 operator 模块为多个运算符提供了对应的函数，从而避免写 lambda a, b: a*b 这种平凡的匿名函数。使用算数运算符函数，可以把上面改为：
 ```Python
@@ -669,7 +690,7 @@ Out[63]: 'GEN_CLOSED'
 
 **并发的关键是你有处理多个任务的能力，不一定要同时。并行的关键是你有同时处理多个任务的能力。**
 
-
+所以，`concurrent.futures` 的副标题用的是`并行(parallel)`，而协程只能用`并发(concurrent)`！
 
 用asyncio.create_task()方法将Coroutine（协程）封装为Task（任务）。一般用于实现异步并发操作。需要注意的是，只有在当前线程存在事件循环的时候才能创建任务（Task）。
 
@@ -677,30 +698,31 @@ Out[63]: 'GEN_CLOSED'
 import asyncio
 import itertools
 
-async def spin(msg):  # <1>
+async def spin(msg):
     for char in itertools.cycle('|/-\\'):
         status = char + ' ' + msg
         print(status, flush=True, end='\r')
         try:
-            await asyncio.sleep(.1)  # <2>
-        except asyncio.CancelledError:  # <3>
+            await asyncio.sleep(.1)
+        except asyncio.CancelledError:
             break
-    print('\n',22222)
+    print('\n', 22222)
 
-async def slow_function():  # <4>
+async def slow_function():
     # pretend waiting a long time for I/O
-    await asyncio.sleep(3)  # <5>
+    await asyncio.sleep(3)
     return 42
 
-async def supervisor():  # <6>
-    spinner = asyncio.create_task(spin('thinking!'))  # <7>
-    print('spinner object:', spinner)  # <8>
-    result = await slow_function()  # <9>
-    spinner.cancel()  # <10>
+async def supervisor():
+  	# 该行不堵塞，然后会立马执行 print 以及后面的语句
+    spinner = asyncio.create_task(spin('thinking!'))
+    print('spinner object:', spinner)
+    result = await slow_function() # 阻塞
+    spinner.cancel()
     return result
 
 def main():
-    result = asyncio.run(supervisor())  # <11>
+    result = asyncio.run(supervisor())
     print('Answer:', result)
 
 # main()
@@ -763,7 +785,7 @@ m.rating = -1  # calls Movie.budget.__set__(m, -1)
 描述符用法建议：
 内置的 property 类创建的其实是覆盖型描述符，`__set__`方法和`__get__`方法都实现了，即便不定义设值也是如此，特性的`__set__`方法默认抛出 AttributeError: cant't set attribute，因此创建只读属性最简单的方式是使用 property 特性。
 
-而对于描述符，若要实现只读属性，要记住，`__set__`和`__get__`方法必须都定义，否则，实例的同名属性会遮盖描述符。只读属性的`__set__`方法只需抛出 AttributeError 异常，比提供合适的错误消息即可。
+而对于描述符，若要实现只读属性，要记住，`__set__`和`__get__`方法必须都定义(而只需要一个@property也能搞定)，否则，实例的同名属性会遮盖描述符。只读属性的`__set__`方法只需抛出 AttributeError 异常，比提供合适的错误消息即可。
 
 ## 第21章 类元编程
 
