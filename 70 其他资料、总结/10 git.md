@@ -16,7 +16,7 @@ git add --> commit --> push
 - git-reset
     Reset current HEAD to the specified state
     有3种模式：
-    - git reset --mixed: HEAD引用指向给定提交，并且索引（暂存区）内容也跟着改变，工作目录内容不变。这个命令会**将索引（暂存区）变成你刚刚暂存该提交全部变化是的状态，会显示工作目录中有什么修改**。
+    - git reset --mixed: HEAD引用指向给定提交，并且索引（暂存区）内容也跟着改变，工作目录内容不变。这个命令会**将索引（暂存区）变成你刚刚暂存该提交全部变化时的状态，会显示工作目录中有什么修改**。(也就是回到你提交前，并且还未执行`git add`时的状态)
     - git reset --soft: 将HEAD引用指向给定提交。索引（暂存区）和工作目录的内容是不变的，在三个命令中对现有版本库状态改动最小。
     - git reset --hard: HEAD引用指向给定提交，索引（暂存区）内容和工作目录内容都会变给定提交时的状态。也就是在给定提交后所修改的内容都会丢失，新文件会被删除。
     假若我想回退上次提交，并在上次提交的基础上再做一点小更改(比如上次提交为 fix some bugs，但里面某行代码少些了个括号，再提交一次显得没有意义)，那么使用reset 的默认方式再好不过了。
@@ -26,7 +26,44 @@ git add --> commit --> push
     Revert some existing commits
     这个就好理解了，通过叠加一次新的提交而达到回退的效果。
 
-还有个小区别，reset 是紧跟你"到达" 的某次commit，而 revert  自然紧跟你想覆盖掉的某次commit。
+还有个小区别，reset 是紧跟你"到达" 的某次commita，而 revert  自然紧跟你想覆盖掉的某次commit。
+
+例子：git log里已经有三次提交：commit_id_2(第二次提交)、commit_id_1 (第一次提交), 如果想撤销掉commit_2，可以有如下方法:
+
+- `git reset commit_id_1`: 此时保留了 commit_id_1 做的修改，但未 add
+- `git reset --soft commit_id_1`: 此时保留了 commit_id_1 做的修改，并且状态属于已经 git add后的了。
+- `git reset --hard commit_id_1`: 此时相当于回到干净时的commit_id_1 状态。
+- `git-revert commit_id_2`： 通过覆盖掉上次提交而达到回退的作用。
+
+
+
+## Git rebase
+
+**场景1:** 合并多次提交纪录
+
+有时候，git history里充满了很多没有意义的commit，比如，针对一个bug，有好多次提交，每次都叫 fix the xxx bug，这不仅仅是多了一些提交记录而已，这样还不利于代码 `review，`同样也会造成分支污染。那么这时，我们可以使用`git rebase`来合并多次提交纪录。
+
+```bash
+# 比如，我们来合并最近的 4 次提交纪录，执行：
+git rebase -i HEAD~4
+# 这时候，会自动进入 vi 编辑模式,根据需要选择相应的命令，然后保存。
+```
+
+需要注意：不要合并先前提交的东西，也就是已经提交远程分支的纪录。不然会导致`error: cannot 'squash' without a previous commit`。
+
+
+
+**场景2:** 分支合并
+
+dev分支：	a --> b --> c --> d
+
+master分支：a --> b
+
+一般要把dev上的提交应用到master分支上去，使用一个merge即可，然后会有一个新的提交(Merge branch xxx)。 但有时我们不希望有这么一个merge的提交记录，则可以使用: git rebase。
+
+详情见 [视频](https://www.bilibili.com/video/BV1Qb411N7ay)
+
+如果执行上面后，我们仅仅想在master上保留一个commit，这时，再在master上使用rebase 回到场景1即可。 [参见链接](https://stackoverflow.com/questions/15727597/git-how-to-rebase-and-squash-commits-from-branch-to-master)
 
 
 
@@ -58,7 +95,7 @@ Commit message 一般都包括三个部分：Header，Body 和 Footer。
 - **style:** 修改样式(不影响代码运行的变动)；
 - **refactor:** 代码重构(即不是新增功能，也不是修改bug的代码变动)；
 - **test:** 增加测试模块，不涉及生产环境的代码；
-- **chore:** 更新核心模块，包配置文件，不涉及生产环境的代码；
+- **chore:** 更新核心模块，包括配置文件，不涉及生产环境的代码；
 
 如果`type`为`feat`和`fix`，则该 commit 将肯定出现在 Change log (**可以直接从commit生成Change log**)之中。其他情况（`docs`、`chore`、`style`、`refactor`、`test`）由你决定，要不要放入 Change log，建议是不要。
 

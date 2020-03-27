@@ -84,7 +84,13 @@ Aspects of languages
 
 ### Towers of Hanoi
 
-规则就省略了。思路就是要把From的 n 层塔按规则放置到  To 塔上去，那么先把 From 上的前 n-1层放到 Temp 上去(step1)，再把 From 上的底层放到 To 上(step2)，再把 Temp 上的 n-1层放到 To 上(step3)。也就说说，只把汉若塔看成2层——底层(n)和其上的(前 n-1层)。
+有三根杆子A，B，C。A杆上有 N 个 (N>1) 穿孔圆盘，盘的尺寸由下到上依次变小。要求按下列规则将所有圆盘移至 C 杆：
+
+- 每次只能移动一个圆盘；
+
+- 大盘不能叠在小盘上面。
+
+思路就是要把From的 n 层塔按规则放置到  To 塔上去，那么先把 From 上的前 n-1层放到 Temp 上去(step1)，再把 From 上的底层放到 To 上(step2)，再把 Temp 上的 n-1层放到 To 上(step3)。也就说说，只把汉诺塔看成2层——底层(n)和其上的(前 n-1层)。
 
 ```python
 def hanoi_tower(n, from_='From', to_='To', temp='Temp'):

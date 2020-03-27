@@ -57,7 +57,7 @@ server {
 ```
 
  3. `正则`命中1，正则匹配优先于前缀匹配
-
+```
 server {
     listen 80;
 
@@ -96,3 +96,4 @@ server {
     
     location ~ /ef.* {}
 }
+```
