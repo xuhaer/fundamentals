@@ -28,10 +28,10 @@ git add --> commit --> push
 
 还有个小区别，reset 是紧跟你"到达" 的某次commita，而 revert  自然紧跟你想覆盖掉的某次commit。
 
-例子：git log里已经有三次提交：commit_id_2(第二次提交)、commit_id_1 (第一次提交), 如果想撤销掉commit_2，可以有如下方法:
+例子：git log里已经有2次提交：commit_id_2(第二次提交)、commit_id_1 (第一次提交), 如果想撤销掉commit_2，可以有如下方法:
 
-- `git reset commit_id_1`: 此时保留了 commit_id_1 做的修改，但未 add
-- `git reset --soft commit_id_1`: 此时保留了 commit_id_1 做的修改，并且状态属于已经 git add后的了。
+- `git reset commit_id_1`: 此时保留了 commit_id_2 做的修改，但未 add
+- `git reset --soft commit_id_1`: 此时保留了 commit_id_2 做的修改，并且状态属于已经 git add后的了。
 - `git reset --hard commit_id_1`: 此时相当于回到干净时的commit_id_1 状态。
 - `git-revert commit_id_2`： 通过覆盖掉上次提交而达到回退的作用。
 
@@ -49,7 +49,7 @@ git rebase -i HEAD~4
 # 这时候，会自动进入 vi 编辑模式,根据需要选择相应的命令，然后保存。
 ```
 
-需要注意：不要合并先前提交的东西，也就是已经提交远程分支的纪录。不然会导致`error: cannot 'squash' without a previous commit`。
+需要注意：不要合并先前提交的东西，也就是已经提交至远程分支的纪录。不然会导致`error: cannot 'squash' without a previous commit`。
 
 
 
