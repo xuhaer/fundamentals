@@ -220,7 +220,7 @@ auth 123321
 
 Compose 项目是 Docker 官方的开源项目，负责实现对 Docker 容器集群的快速编排。
 
-通过第一部分中的介绍，我们知道使用一个 Dockerfile 模板文件，可以让用户很方便的定义一个单独的应用容器。然而，在日常工作中，经常会碰到需要多个容器相互配合来完成某项任务的情况。例如要实现一个 Web 项目，除了 Web 服务容器本身，往往还需要再加上后端的数据库服务容器，甚至还包括负载均衡容器等。
+通过第一部分中的介绍，我们知道使**用一个 Dockerfile 模板文件，可以让用户很方便的定义一个单独的应用容器**。然而，在日常工作中，经常会碰到需要多个容器相互配合来完成某项任务的情况。例如要实现一个 Web 项目，除了 Web 服务容器本身，往往还需要再加上后端的数据库服务容器，甚至还包括负载均衡容器等。
 Compose 恰好满足了这样的需求。它允许用户通过一个单独的 docker-compose.yml 模板文件（YAML 格式）来定义一组相关联的应用容器为一个项目（project）。
 
 Compose 中有两个重要的概念：
@@ -235,10 +235,10 @@ Compose 项目由 Python 编写，实现上调用了 Docker 服务提供的 API 
 文件路径大致如下:
 ```bash
 - django-project
-    - app
+    - myapp/
     - settings/
 - nginx
-    - sites-enabled
+    - sites-enabled/
     - Dockerfile
 - docker-compose.yml
 - .env
@@ -255,9 +255,9 @@ services:
     image: mysql:5.7
     restart: always
     ports:
-    # 使用宿主：容器（HOST:CONTAINER）格式，或者仅仅指定容器的端口（宿主将会随机选择端口）都可以。
+    # 使用宿主：容器(HOST:CONTAINER)格式，或者仅仅指定容器的端口(宿主将会随机选择端口)都可以。
       - 3306
-    env_file: .env # 使用文件为容器设置多个环境变量
+    env_file: .env # 使用文件读取多个环境变量
     volumes: xxx_mysql_data:/var/lib/mysql
   web:
     build: .
