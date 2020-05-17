@@ -26,7 +26,7 @@ git add --> commit --> push
     Revert some existing commits
     这个就好理解了，通过叠加一次新的提交而达到回退的效果。
 
-还有个小区别，reset 是紧跟你"到达" 的某次commita，而 revert  自然紧跟你想覆盖掉的某次commit。
+还有个小区别，reset 是紧跟你"到达" 的某次commit，而 revert  自然紧跟你想覆盖掉的某次commit。
 
 例子：git log里已经有2次提交：commit_id_2(第二次提交)、commit_id_1 (第一次提交), 如果想撤销掉commit_2，可以有如下方法:
 
