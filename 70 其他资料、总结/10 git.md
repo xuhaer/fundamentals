@@ -66,6 +66,75 @@ master分支：a --> b
 如果执行上面后，我们仅仅想在master上保留一个commit，这时，再在master上使用rebase 回到场景1即可。 [参见链接](https://stackoverflow.com/questions/15727597/git-how-to-rebase-and-squash-commits-from-branch-to-master)
 
 
+## 多分支开发 Git 相关流程
+
+### 若有git clone (git push)的权限
+
+这种情况，我个人不太喜欢先fork，我偏向于直接 clone，然后切到工作分支，再checkout -b 至个人分支，最后提交(在远程上创建自己的分支)。
+
+例子：alarm库的dev分支上有个bug，需要做相应修改。
+
+```bash
+# 1. clone 指定分支(-b, 也可默认clone,再切换分支):
+git clone -b dev ssh://git@code-cbu.huawei.com:2233/CBU-PaaS/CCI/CCI-Common/alarm.git
+
+# 2. 切到个人分支
+git checkout -b xxl-fix
+
+# 3. 修复bug commit 后fetch一下，确保拉取到远程最新的代码
+git fetch origin
+
+# 4. 若远程有新的提交，则rebase一下。若有冲突，则合并冲突
+git rebase origin/dev # 此例子是我需要在dev分支上做修改
+
+# 5. git push (冒号前是本地分支名，冒号前的是你远程想创建的分支名)
+# 下例中等价于 git push origin xxl-fix
+git push origin xxl-fix:xxl-fix
+
+# 6. 提交将xxl-fix分支merge 到 dev分支的 PR
+
+git clone ssh://git@code-cbu.huawei.com:2233/CBU-PaaS/CCI/CCI-Common/alarm.git
+
+# 7. merge后删除该修复分支
+git push --delete origin xxl-fix
+```
+
+### 若没有权限，只能fork
+
+例子：alarm库的dev分支上有个bug，需要做相应修改。
+
+```bash
+# 1. 先fork该项目到自己仓库
+
+# 2. clone fork后的项目, 指定分支(-b, 也可默认clone,再切换分支):
+git clone -b dev ssh://git@code-cbu.huawei.com:2233/x30005286/alarm.git
+
+# 3. 切到个人分支
+git checkout -b xxl-fix
+
+# 3. 修复bug commit 后fetch一下，确保拉取到远程最新的代码
+git fetch origin
+
+# 4. 若远程有新的提交，则rebase一下。若有冲突，则合并冲突
+git rebase origin/dev # 此例子是我需要在dev分支上做修改
+
+# 5. git push (冒号前是本地分支名，冒号前的是你远程想创建的分支名)
+# 下例中等价于 git push origin xxl-fix
+git push origin xxl-fix:xxl-fix
+
+# 6. 提交将xxl-fix分支merge 到 dev分支的 PR
+
+# 当然，若有clone、push的权限，你也可以先fork，按照上面的操作，到了第5步后，也可：
+# git remote add <别名> <url>
+# 6. git remote add huawei ssh://git@code-cbu.huawei.com:2233/CBU-PaaS/CCI/CCI-Common/alarm.git
+
+# 7. 然后直接push 到华为的远程分支
+git push huawei xxl-fix:xxl-fix
+
+# 8.提交将huawei项目仓库中的 xxl-fix分支merge 到 dev分支的 PR
+```
+
+
 
 ## Git Commit Message 编写指南
 
